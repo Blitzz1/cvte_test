@@ -1,6 +1,53 @@
 #include "detection/core.hpp"
 #include <numeric>
 namespace avqm {
+bool ByteBudget::acquire(size_t bytes) {
+    auto current = used_.load();
+    while (true) {
+        auto limit = limit_.load();
+        if (bytes > limit || current > limit - bytes)
+            return false;
+        if (used_.compare_exchange_weak(current, current + bytes)) {
+            auto high = peak_.load();
+            while (high < current + bytes && !peak_.compare_exchange_weak(high, current + bytes)) {
+            }
+            return true;
+        }
+    }
+}
+std::shared_ptr<ByteLease> ByteLease::reserve(const std::shared_ptr<ByteBudget> &budget, size_t bytes) {
+    if (!budget || !budget->acquire(bytes))
+        return {};
+    std::unique_ptr<ByteLease> lease;
+    try {
+        lease.reset(new ByteLease(budget, bytes));
+    } catch (...) {
+        budget->release(bytes);
+        throw;
+    }
+    return std::shared_ptr<ByteLease>(std::move(lease));
+}
+std::optional<double> observed_sync_offset(const AudioClockSample &a, uint64_t generation, Microseconds video,
+                                           Microseconds observed, Microseconds freshness) {
+    if (a.generation != generation || observed < a.observed_us || observed - a.observed_us >= freshness ||
+        observed >= a.valid_until_us)
+        return {};
+    return sync_offset_ms(a.media_us + observed - a.observed_us, video);
+}
+bool append_sync_segment(std::vector<SyncSample> &values, SyncSample value) {
+    bool reset = false;
+    if (!values.empty() &&
+        (value.seconds <= values.back().seconds || value.seconds - values.back().seconds > 0.5 ||
+         std::abs(value.offset_ms - values.back().offset_ms) > 50)) {
+        values.clear();
+        reset = true;
+    }
+    values.push_back(value);
+    auto first = std::lower_bound(values.begin(), values.end(), value.seconds - 60,
+                                  [](auto &a, double time) { return a.seconds < time; });
+    values.erase(values.begin(), first);
+    return reset;
+}
 std::optional<Fit> fit_drift(const std::vector<SyncSample> &s) {
     if (s.size() < 3)
         return {};

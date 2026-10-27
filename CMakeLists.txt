@@ -7,7 +7,7 @@ add_compile_definitions(NOMINMAX WIN32_LEAN_AND_MEAN _CRT_SECURE_NO_WARNINGS UNI
 if(MSVC)
   add_compile_options(/utf-8 /W4 /permissive-)
 endif()
-add_library(avqm_core src/detection/core.cpp)
+add_library(avqm_core src/detection/core.cpp src/storage/observations.cpp)
 target_include_directories(avqm_core PUBLIC src)
 include(CTest)
 add_executable(core_tests tests/core_tests.cpp)

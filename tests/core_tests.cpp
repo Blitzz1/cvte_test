@@ -1,6 +1,10 @@
 #include "detection/core.hpp"
+#include "storage/observations.hpp"
+#include <fstream>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
+#include <thread>
 using namespace avqm;
 void check(bool v, const char *name) {
     if (!v)
@@ -10,6 +14,71 @@ int main() {
     try {
         check(measured_latency_ms(1000000, 1300000) == 300, "latency units");
         check(!measured_latency_ms(100, 99), "negative latency rejected");
+        auto budget = std::make_shared<ByteBudget>(1024);
+        auto pixels = ByteLease::reserve(budget, 800);
+        auto shared = pixels;
+        check(pixels && budget->used() == 800 && !ByteLease::reserve(budget, 300),
+              "pixel byte cap before allocation");
+        pixels.reset();
+        check(budget->used() == 800, "shared image remains charged");
+        shared.reset();
+        check(budget->used() == 0, "pixel storage last-owner release");
+        check(!ByteLease::reserve(budget, std::numeric_limits<size_t>::max()), "budget overflow rejected");
+        std::vector<std::thread> producers;
+        for (int i = 0; i < 8; ++i)
+            producers.emplace_back([&] {
+                for (int k = 0; k < 2000; ++k) {
+                    auto lease = ByteLease::reserve(budget, 160);
+                    if (lease)
+                        std::this_thread::yield();
+                }
+            });
+        for (auto &t : producers)
+            t.join();
+        check(budget->used() == 0 && budget->peak() <= 1024, "concurrent reservations remain bounded");
+        AudioClockSample clock{7, 10000000, 1000000, 1020000};
+        check(observed_sync_offset(clock, 7, 10000000, 1010000) == 10, "device clock interpolation");
+        check(!observed_sync_offset(clock, 8, 10000000, 1010000), "old playback generation rejected");
+        check(!observed_sync_offset(clock, 7, 10000000, 999999), "future clock reading rejected");
+        check(!observed_sync_offset(clock, 7, 10000000, 1015000), "stale audio clock rejected");
+        clock.valid_until_us = 1009000;
+        check(!observed_sync_offset(clock, 7, 10000000, 1010000),
+              "no extrapolation beyond mapped PCM segment");
+        std::vector<SyncSample> segments;
+        for (int i = 0; i < 1800; i++)
+            append_sync_segment(segments, {i / 30.0, i / 30.0 * 5});
+        check(segments.size() == 1800 && std::abs(fit_drift(segments)->slope_ms_per_s - 5) < 1e-9,
+              "gradual drift retains fit segment");
+        check(append_sync_segment(segments, {60, 650}) && segments.size() == 1,
+              "fixed AV jump is not progressive drift");
+        check(append_sync_segment(segments, {62, 650}) && segments.size() == 1,
+              "clock gap resets trend evidence");
+        auto dir = std::filesystem::current_path() / "observation-tests" /
+                   std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());
+        ObservationJournal journal(dir, 1024, false);
+        size_t accepted = 0;
+        for (int i = 0; i < 100; ++i)
+            if (journal.append("stream", "{\"frame\":" + std::to_string(i) + "}"))
+                ++accepted;
+        check(accepted > 0 && accepted < 100 && journal.stats("stream").queued_bytes <= 1024 &&
+                  journal.stats("stream").dropped == 100 - accepted,
+              "stalled evidence writer is bounded and reports loss");
+        check(!journal.append("../escape", "{}"), "observation filename traversal rejected");
+        journal.start();
+        journal.flush();
+        std::ifstream saved(dir / "stream.jsonl");
+        size_t saved_count = 0;
+        std::string line;
+        while (std::getline(saved, line))
+            ++saved_count;
+        check(saved_count == accepted && journal.stats("stream").written == accepted,
+              "accepted evidence flushed without media dependency");
+        std::filesystem::create_directory(dir / "blocked.jsonl");
+        journal.append("blocked", "{}");
+        journal.flush();
+        check(journal.stats("blocked").dropped > 0, "disk write failure invalidates evidence completeness");
+        journal.stop();
+        check(!journal.append("stream", "{}"), "closed journal rejects late producers");
         check(sync_offset_ms(10100000, 10000000) == 100, "audio lead sign");
         std::vector<SyncSample> samples;
         for (int i = 0; i < 60; ++i)

@@ -1,9 +1,11 @@
 #pragma once
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstdint>
 #include <deque>
 #include <map>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
@@ -23,6 +25,54 @@ struct Fit {
 std::optional<Fit> fit_drift(const std::vector<SyncSample> &samples);
 std::optional<double> measured_latency_ms(Microseconds source, Microseconds presented);
 std::optional<double> sync_offset_ms(Microseconds audio_source, Microseconds video_source);
+
+// Pixel storage is charged before allocation and released with its last owner.
+class ByteBudget {
+  public:
+    explicit ByteBudget(size_t limit) : limit_(limit) {}
+    bool acquire(size_t bytes);
+    void release(size_t bytes) {
+        used_.fetch_sub(bytes);
+    }
+    void set_limit(size_t bytes) {
+        limit_ = bytes;
+    }
+    size_t used() const {
+        return used_;
+    }
+    size_t peak() const {
+        return peak_;
+    }
+    size_t limit() const {
+        return limit_;
+    }
+
+  private:
+    std::atomic<size_t> used_{0}, peak_{0}, limit_;
+};
+class ByteLease {
+  public:
+    static std::shared_ptr<ByteLease> reserve(const std::shared_ptr<ByteBudget> &budget, size_t bytes);
+    ~ByteLease() {
+        budget_->release(bytes_);
+    }
+    ByteLease(const ByteLease &) = delete;
+    ByteLease &operator=(const ByteLease &) = delete;
+
+  private:
+    ByteLease(std::shared_ptr<ByteBudget> budget, size_t bytes) : budget_(std::move(budget)), bytes_(bytes) {}
+    std::shared_ptr<ByteBudget> budget_;
+    size_t bytes_;
+};
+struct AudioClockSample {
+    uint64_t generation{};
+    Microseconds media_us{}, observed_us{}, valid_until_us{};
+};
+std::optional<double> observed_sync_offset(const AudioClockSample &audio, uint64_t generation,
+                                           Microseconds video_media, Microseconds observed,
+                                           Microseconds freshness = 15000);
+// Returns true when a gap, reverse time or measured step begins a new fit segment.
+bool append_sync_segment(std::vector<SyncSample> &samples, SyncSample value);
 
 enum class Outcome {
     pending,

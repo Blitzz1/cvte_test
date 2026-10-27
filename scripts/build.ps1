@@ -1,4 +1,4 @@
-param([switch]$CoreOnly)
+param([switch]$CoreOnly,[ValidateRange(1,4)][int]$Jobs=2)
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot
 $cmake='C:\Program Files\Microsoft Visual Studio\18\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe'
@@ -9,6 +9,6 @@ $envLines = & cmd.exe /s /c "`"$vs\VC\Auxiliary\Build\vcvars64.bat`" -vcvars_ver
 if($LASTEXITCODE){throw 'Cannot initialize MSVC 14.44 environment'}
 foreach($line in $envLines){ if($line -match '^([^=]+)=(.*)$'){[Environment]::SetEnvironmentVariable($matches[1],$matches[2],'Process')} }
 $env:PATH="$vs\Common7\IDE\CommonExtensions\Microsoft\CMake\Ninja;$env:PATH"
-if($CoreOnly){ & $cmake -S . -B build-core-ninja -G Ninja -DCMAKE_BUILD_TYPE=Release -DAVQM_BUILD_APP=OFF; if($LASTEXITCODE){exit $LASTEXITCODE}; & $cmake --build build-core-ninja; if($LASTEXITCODE){exit $LASTEXITCODE}; & "$([IO.Path]::GetDirectoryName($cmake))/ctest.exe" --test-dir build-core-ninja --output-on-failure }
-else { & $cmake --preset windows-release; if($LASTEXITCODE){exit $LASTEXITCODE}; & $cmake --build --preset windows-release }
+if($CoreOnly){ & $cmake -S . -B build-core-ninja -G Ninja -DCMAKE_BUILD_TYPE=Release -DAVQM_BUILD_APP=OFF; if($LASTEXITCODE){exit $LASTEXITCODE}; & $cmake --build build-core-ninja --parallel $Jobs; if($LASTEXITCODE){exit $LASTEXITCODE}; & "$([IO.Path]::GetDirectoryName($cmake))/ctest.exe" --test-dir build-core-ninja --output-on-failure }
+else { & $cmake --preset windows-release; if($LASTEXITCODE){exit $LASTEXITCODE}; & $cmake --build --preset windows-release --parallel $Jobs }
 exit $LASTEXITCODE
