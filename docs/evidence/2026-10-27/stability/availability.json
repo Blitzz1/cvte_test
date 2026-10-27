@@ -1,0 +1,90 @@
+﻿[
+    {
+        "id":  "rtsp-udp",
+        "fps_zero":  27,
+        "fps_under28":  56,
+        "latency_valid":  93,
+        "sync_valid":  70,
+        "freeze_peak_ms":  5176.071,
+        "present_delta":  62140,
+        "source_delta":  108354,
+        "reasons_last":  "{\"presentation_dropped\":95,\"presented\":5,\"unknown_missing\":200}"
+    },
+    {
+        "id":  "rtsp-tcp",
+        "fps_zero":  27,
+        "fps_under28":  56,
+        "latency_valid":  92,
+        "sync_valid":  74,
+        "freeze_peak_ms":  5178.995,
+        "present_delta":  62149,
+        "source_delta":  108357,
+        "reasons_last":  "{\"unknown_missing\":300}"
+    },
+    {
+        "id":  "rtmp-3",
+        "fps_zero":  27,
+        "fps_under28":  56,
+        "latency_valid":  91,
+        "sync_valid":  75,
+        "freeze_peak_ms":  5182.132,
+        "present_delta":  62150,
+        "source_delta":  108358,
+        "reasons_last":  "{\"unknown_missing\":299}"
+    },
+    {
+        "id":  "rtmp-4",
+        "fps_zero":  27,
+        "fps_under28":  56,
+        "latency_valid":  91,
+        "sync_valid":  74,
+        "freeze_peak_ms":  5184.922,
+        "present_delta":  62148,
+        "source_delta":  108359,
+        "reasons_last":  "{\"unknown_missing\":300}"
+    },
+    {
+        "id":  "chain-5",
+        "fps_zero":  27,
+        "fps_under28":  56,
+        "latency_valid":  90,
+        "sync_valid":  76,
+        "freeze_peak_ms":  5187.585,
+        "present_delta":  62152,
+        "source_delta":  108361,
+        "reasons_last":  "{\"presentation_dropped\":18,\"unknown_missing\":282}"
+    },
+    {
+        "id":  "chain-6",
+        "fps_zero":  27,
+        "fps_under28":  56,
+        "latency_valid":  89,
+        "sync_valid":  76,
+        "freeze_peak_ms":  5190.664,
+        "present_delta":  62155,
+        "source_delta":  108363,
+        "reasons_last":  "{\"presentation_dropped\":156,\"presented\":8,\"unknown_missing\":136}"
+    },
+    {
+        "id":  "chain-7",
+        "fps_zero":  30,
+        "fps_under28":  56,
+        "latency_valid":  86,
+        "sync_valid":  71,
+        "freeze_peak_ms":  5286.419,
+        "present_delta":  62153,
+        "source_delta":  108366,
+        "reasons_last":  "{\"unknown_missing\":300}"
+    },
+    {
+        "id":  "chain-8",
+        "fps_zero":  36,
+        "fps_under28":  56,
+        "latency_valid":  80,
+        "sync_valid":  72,
+        "freeze_peak_ms":  5828.312,
+        "present_delta":  62155,
+        "source_delta":  108367,
+        "reasons_last":  "{\"unknown_missing\":300}"
+    }
+]

@@ -12,6 +12,14 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1
 
 脚本启动本项目 MediaMTX 和检测程序，然后打开 `http://127.0.0.1:8080`。默认四条完整链路，源文件在 `config/app.json` 配置；运行期间不联网下载依赖。第一次生成测试素材可执行 `scripts/make-sample.ps1 -Seconds 300 -OutputName sample-3m.mp4`（使用相同的 PowerShell 调用前缀）。也可以直接使用自己的同步 H.264/AAC 文件。
 
+默认是持续运行的交互模式，使用后需执行停止命令。办公本上的自动化测试应使用明确时限，例如：
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1 -Seconds 120 -NoBrowser
+```
+
+定时入口到期会清理本轮检测程序及媒体服务；稳定性采集脚本也在结束或异常时自动收尾，默认短测5分钟，一小时需显式传入`-Minutes 60`。清理会先尝试有序退出，再作有限等待。当前八路一小时稳定性**未通过**，存在输出停顿与约4.90GiB私有内存峰值，详见[分析报告](docs/八路一小时稳定性分析报告.md)；应先优化，避免在办公本上反复长时运行。
+
 ```powershell
 # 开发构建；自动选择已安装的 MSVC 14.44 + Ninja
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1

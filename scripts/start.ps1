@@ -18,7 +18,16 @@ for($attempt=0;$attempt -lt 50;$attempt++){
 }
 if(-not $serverReady){throw 'Media server port did not become ready'}
 $app=Start-Process -FilePath "$root/runtime/avqm.exe" -ArgumentList '--seconds',$Seconds,'--config',('"'+$requestedConfig+'"') -WorkingDirectory $root -WindowStyle Hidden -PassThru -RedirectStandardOutput "$root/artifacts/app.log" -RedirectStandardError "$root/artifacts/app-error.log"
-@{app_pid=$app.Id;server_pid=$server.Id;app_path="$root/runtime/avqm.exe";server_path=$serverPath} | ConvertTo-Json | Set-Content "$root/runtime/processes.json" -Encoding UTF8
+$record=@{app_pid=$app.Id;server_pid=$server.Id;app_path=[IO.Path]::GetFullPath("$root/runtime/avqm.exe");server_path=$serverPath;port=$applicationConfig.port;app_started_utc=$app.StartTime.ToUniversalTime().ToString('o');server_started_utc=$server.StartTime.ToUniversalTime().ToString('o')}
+$record|ConvertTo-Json|Set-Content "$root/runtime/processes.json" -Encoding UTF8
+if($Seconds -gt 0){
+  New-Item -ItemType Directory -Force "$root/runtime/runs"|Out-Null
+  $receipt="$root/runtime/runs/run-$($app.Id)-$([DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()).json"
+  $record|ConvertTo-Json|Set-Content $receipt -Encoding UTF8
+  try{
+    Start-Process powershell.exe -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',('"'+$PSScriptRoot+'\wait-and-stop.ps1"'),'-RecordPath',('"'+$receipt+'"'),'-StopAtUtc',([DateTimeOffset]::UtcNow.AddSeconds($Seconds+2).ToString('o')) -WorkingDirectory $root -WindowStyle Hidden -RedirectStandardOutput "$root/artifacts/timed-cleanup.log" -RedirectStandardError "$root/artifacts/timed-cleanup-error.log"|Out-Null
+  }catch{& "$PSScriptRoot/stop.ps1" -RecordPath $receipt;throw}
+}
 $appReady=$false
 for($attempt=0;$attempt -lt 50;$attempt++){if($app.HasExited){throw 'Monitor exited; inspect artifacts/app-error.log'};try{Invoke-RestMethod "http://127.0.0.1:$($applicationConfig.port)/api/v1/health" -TimeoutSec 1 | Out-Null;$appReady=$true;break}catch{Start-Sleep -Milliseconds 100}}
 if(-not $appReady){throw 'Dashboard did not become ready; inspect artifacts/app-error.log'}
