@@ -67,6 +67,8 @@ class ByteLease {
 struct AudioClockSample {
     uint64_t generation{};
     Microseconds media_us{}, observed_us{}, valid_until_us{};
+    uint64_t device_position{}, device_frequency{}, pcm_begin_frame{};
+    Microseconds pcm_begin_media_us{};
 };
 std::optional<double> observed_sync_offset(const AudioClockSample &audio, uint64_t generation,
                                            Microseconds video_media, Microseconds observed,

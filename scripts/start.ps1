@@ -3,9 +3,10 @@ $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot
 Set-Location $root
 $requestedConfig=$Config
+if(-not [IO.Path]::IsPathRooted($requestedConfig)){$requestedConfig=Join-Path $root $requestedConfig}
 if(-not(Test-Path "$root/runtime/avqm.exe")){throw 'Build first: powershell -ExecutionPolicy Bypass -File scripts/build.ps1'}
-$applicationConfig=Get-Content (Join-Path $root $requestedConfig) -Raw -Encoding UTF8 | ConvertFrom-Json
-foreach($chain in $applicationConfig.chains){if($chain.enabled -and $chain.direction -ne 'pull' -and -not(Test-Path (Join-Path $root $chain.source))){throw "Source file missing: $($chain.source). Configure your own synchronized H.264/AAC file or run scripts/make-sample.ps1 -OutputName sample-3m.mp4."}}
+$applicationConfig=Get-Content $requestedConfig -Raw -Encoding UTF8 | ConvertFrom-Json
+foreach($chain in $applicationConfig.chains){$sourcePath=if([IO.Path]::IsPathRooted($chain.source)){$chain.source}else{Join-Path $root $chain.source};if($chain.enabled -and $chain.direction -ne 'pull' -and -not(Test-Path $sourcePath)){throw "Source file missing: $($chain.source). Configure your own synchronized H.264/AAC file or run scripts/make-sample.ps1 -OutputName sample-3m.mp4."}}
 New-Item -ItemType Directory -Force "$root/artifacts","$root/runtime" | Out-Null
 $serverPath=[IO.Path]::GetFullPath("$root/third_party/mediamtx/mediamtx.exe")
 $existing=Get-Process mediamtx -ErrorAction SilentlyContinue | Where-Object Path -EQ $serverPath | Select-Object -First 1

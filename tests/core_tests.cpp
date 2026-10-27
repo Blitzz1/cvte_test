@@ -96,6 +96,10 @@ int main() {
                   loss.consecutive_max == 2,
               "exclusive outcomes and pending denominator");
         check(!summarize_loss({}).percent, "zero denominator unavailable");
+        frames[0].damaged = true;
+        auto concealed = summarize_loss(frames);
+        check(concealed.missing == loss.missing && concealed.reasons.at("presented") == 2,
+              "transport-damaged but presented frame is not counted as a missing frame");
         FreezeTracker freeze;
         for (int i = 0; i < 31; ++i)
             freeze.presented(i * 33333);

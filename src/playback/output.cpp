@@ -12,11 +12,11 @@ namespace avqm {
 struct Output::Impl {
     Application &app;
     HWND window{};
-    std::vector<std::optional<VideoImage>> images;
     ComPtr<ID2D1Factory> factory;
     ComPtr<ID2D1RenderTarget> renderer;
     ComPtr<IWICImagingFactory> wic;
     ComPtr<IWICBitmap> surface;
+    ComPtr<ID2D1SolidColorBrush> black;
     std::vector<ComPtr<ID2D1Bitmap>> bitmaps;
     std::atomic<int> selected_audio{-1};
     std::thread audio_thread;
@@ -43,6 +43,8 @@ struct Output::Impl {
         UINT32 capacity{};
         UINT64 frequency{};
         uint64_t submitted{};
+        uint64_t last_position{};
+        int64_t last_position_us{};
         uint64_t generation = 0;
         int last_audio_selection = -2;
         struct Segment {
@@ -97,61 +99,88 @@ struct Output::Impl {
     void audio_loop() {
         CoInitializeEx(nullptr, COINIT_MULTITHREADED);
         std::vector<std::unique_ptr<AudioDevice>> devices(app.chains.size());
-        for (size_t i = 0; i < devices.size(); ++i) {
-            auto d = std::make_unique<AudioDevice>();
-            if (d->init())
-                devices[i] = std::move(d);
-            else {
-                std::lock_guard lock(app.chains[i]->mutex);
-                app.chains[i]->audio_validity = "audio_device_unavailable";
-            }
-        }
+        std::vector<int64_t> retry_at(app.chains.size(), 0);
         while (!done && !app.quit) {
             for (size_t i = 0; i < devices.size(); ++i) {
-                if (!devices[i])
-                    continue;
-                auto &d = *devices[i];
                 auto &chain = *app.chains[i];
+                uint64_t generation;
+                bool needed;
                 {
                     std::lock_guard lock(chain.mutex);
-                    if (d.generation != chain.playback_generation) {
-                        d.client->Stop();
-                        d.client->Reset();
-                        BYTE *initial{};
-                        if (SUCCEEDED(d.render->GetBuffer(d.capacity, &initial))) {
-                            std::memset(initial, 0, size_t(d.capacity) * 8);
-                            d.render->ReleaseBuffer(d.capacity, AUDCLNT_BUFFERFLAGS_SILENT);
-                        }
-                        d.client->Start();
-                        d.generation = chain.playback_generation;
-                        d.submitted = d.capacity;
-                        d.segments.clear();
-                        d.chunk.reset();
-                        d.offset = 0;
+                    generation = chain.playback_generation;
+                    needed = chain.cfg.has_audio && !chain.stop_requested;
+                }
+                if (!needed) {
+                    devices[i].reset();
+                    continue;
+                }
+                if (!devices[i]) {
+                    if (now_us() < retry_at[i])
+                        continue;
+                    auto fresh = std::make_unique<AudioDevice>();
+                    if (!fresh->init()) {
+                        chain.audio_unavailable(generation, "audio_device_unavailable");
+                        retry_at[i] = now_us() + 1000000;
+                        continue;
                     }
+                    fresh->generation = generation;
+                    devices[i] = std::move(fresh);
+                }
+                auto &d = *devices[i];
+                // Device calls never hold the media mutex.
+                if (d.generation != generation) {
+                    d.client->Stop();
+                    if (FAILED(d.client->Reset())) {
+                        chain.audio_unavailable(generation, "audio_reset_failed");
+                        devices[i].reset();
+                        retry_at[i] = now_us() + 1000000;
+                        continue;
+                    }
+                    BYTE *initial{};
+                    if (FAILED(d.render->GetBuffer(d.capacity, &initial))) {
+                        chain.audio_unavailable(generation, "audio_reset_failed");
+                        devices[i].reset();
+                        continue;
+                    }
+                    std::memset(initial, 0, size_t(d.capacity) * 8);
+                    d.render->ReleaseBuffer(d.capacity, AUDCLNT_BUFFERFLAGS_SILENT);
+                    if (FAILED(d.client->Start())) {
+                        chain.audio_unavailable(generation, "audio_start_failed");
+                        devices[i].reset();
+                        continue;
+                    }
+                    d.generation = generation;
+                    d.submitted = d.capacity;
+                    d.segments.clear();
+                    d.chunk.reset();
+                    d.offset = 0;
+                    d.last_position = 0;
+                    d.last_position_us = 0;
                 }
                 if (d.volume && d.last_audio_selection != selected_audio) {
                     d.volume->SetMasterVolume(selected_audio == int(i) ? 0.4f : 0.0f, nullptr);
                     d.last_audio_selection = selected_audio;
                 }
                 UINT32 padding{};
-                if (FAILED(d.client->GetCurrentPadding(&padding)))
+                if (FAILED(d.client->GetCurrentPadding(&padding)) || padding > d.capacity) {
+                    chain.audio_unavailable(generation, "audio_device_error");
+                    devices[i].reset();
+                    retry_at[i] = now_us() + 1000000;
                     continue;
-                auto available = d.capacity - padding;
+                }
                 if (padding == 0) {
                     UINT64 raw{}, qpc{};
-                    if (SUCCEEDED(d.clock->GetPosition(&raw, &qpc)) && d.frequency) {
-                        auto current_frame = uint64_t((long double)raw * 48000 / d.frequency);
-                        if (current_frame > d.submitted) {
-                            d.submitted = current_frame;
+                    if (d.clock->GetPosition(&raw, &qpc) == S_OK && d.frequency) {
+                        auto current = uint64_t((long double)raw * 48000 / d.frequency);
+                        if (current > d.submitted) {
+                            d.submitted = current;
                             d.segments.clear();
+                            chain.audio_unavailable(generation, "audio_underrun");
                         }
                     }
                 }
+                auto available = d.capacity - padding;
                 if (available) {
-                    UINT64 write_position{}, write_qpc{};
-                    if (SUCCEEDED(d.clock->GetPosition(&write_position, &write_qpc)) && d.frequency)
-                        d.submitted = uint64_t((long double)write_position * 48000 / d.frequency) + padding;
                     BYTE *bytes{};
                     if (SUCCEEDED(d.render->GetBuffer(available, &bytes))) {
                         auto *out = reinterpret_cast<float *>(bytes);
@@ -160,54 +189,86 @@ struct Output::Impl {
                         while (written < available) {
                             if (!d.chunk) {
                                 std::lock_guard lock(chain.mutex);
-                                // Bound lateness after startup/reconnect instead of replaying an ever-growing
-                                // queue.
-                                while (chain.audio.size() > 1 &&
-                                       chain.audio.front().due_us <
-                                           now_us() + int64_t(padding + written) * 1000000 / 48000 - 15000)
-                                    chain.audio.pop_front();
-                                if (!chain.audio.empty() &&
-                                    chain.audio.front().due_us <=
-                                        now_us() + int64_t(padding + written) * 1000000 / 48000) {
-                                    d.chunk = std::move(chain.audio.front());
-                                    chain.audio.pop_front();
-                                    d.offset = 0;
-                                } else
+                                if (generation != chain.playback_generation || chain.stop_requested)
                                     break;
+                                auto target = now_us() + int64_t(padding + written) * 1000000 / 48000;
+                                while (
+                                    !chain.audio.empty() &&
+                                    (chain.audio.front().generation != generation ||
+                                     (chain.audio.size() > 1 && chain.audio.front().due_us < target - 15000)))
+                                    chain.audio.pop_front();
+                                if (chain.audio.empty() || chain.audio.front().due_us > target)
+                                    break;
+                                d.chunk = std::move(chain.audio.front());
+                                chain.audio.pop_front();
+                                d.offset = 0;
+                            }
+                            if (d.chunk->generation != generation) {
+                                d.chunk.reset();
+                                continue;
                             }
                             auto remaining = d.chunk->samples.size() / 2 - d.offset;
-                            size_t n = std::min<size_t>(available - written, remaining);
-                            std::copy_n(d.chunk->samples.data() + d.offset * 2, n * 2, out + written * 2);
+                            auto count = std::min<size_t>(available - written, remaining);
+                            std::copy_n(d.chunk->samples.data() + d.offset * 2, count * 2, out + written * 2);
                             if (d.chunk->mapped)
                                 d.segments.push_back(
-                                    {d.submitted + written, d.submitted + written + n,
+                                    {d.submitted + written, d.submitted + written + count,
                                      d.chunk->media_us + int64_t(d.offset) * 1000000 / 48000});
-                            written += n;
-                            d.offset += n;
+                            written += count;
+                            d.offset += count;
                             if (d.offset >= d.chunk->samples.size() / 2)
                                 d.chunk.reset();
                         }
-                        d.render->ReleaseBuffer(available, 0);
+                        if (FAILED(d.render->ReleaseBuffer(available, 0))) {
+                            chain.audio_unavailable(generation, "audio_device_error");
+                            devices[i].reset();
+                            continue;
+                        }
                         d.submitted += available;
+                    } else {
+                        chain.audio_unavailable(generation, "audio_buffer_unavailable");
+                        continue;
                     }
                 }
                 UINT64 position{}, qpc{};
-                if (SUCCEEDED(d.clock->GetPosition(&position, &qpc)) && d.frequency) {
-                    uint64_t frame = uint64_t((long double)position * 48000 / d.frequency);
+                bool valid = false;
+                if (d.clock->GetPosition(&position, &qpc) == S_OK && d.frequency) {
+                    if ((d.last_position_us && position < d.last_position) ||
+                        (d.last_position_us && position == d.last_position &&
+                         now_us() - d.last_position_us > 100000) ||
+                        d.segments.size() > 512) {
+                        chain.audio_unavailable(generation, "audio_clock_discontinuous");
+                        devices[i].reset();
+                        retry_at[i] = now_us() + 1000000;
+                        continue;
+                    }
+                    if (!d.last_position_us || position != d.last_position) {
+                        d.last_position = position;
+                        d.last_position_us = now_us();
+                    }
+                    auto frame = uint64_t((long double)position * 48000 / d.frequency);
                     while (!d.segments.empty() && d.segments.front().end <= frame)
                         d.segments.pop_front();
                     if (!d.segments.empty() && frame >= d.segments.front().begin &&
                         frame < d.segments.front().end) {
-                        auto &s = d.segments.front();
+                        auto &segment = d.segments.front();
                         LARGE_INTEGER counter{}, frequency{};
                         QueryPerformanceCounter(&counter);
                         QueryPerformanceFrequency(&frequency);
-                        auto age_us = int64_t((long double)counter.QuadPart * 1000000 / frequency.QuadPart) -
-                                      int64_t(qpc / 10);
-                        chain.audio_progress(s.media + int64_t(frame - s.begin) * 1000000 / 48000,
-                                             now_us() - std::max<int64_t>(0, age_us), position, d.frequency);
+                        auto age = int64_t((long double)counter.QuadPart * 1000000 / frequency.QuadPart) -
+                                   int64_t(qpc / 10);
+                        if (age >= 0 && age < 15000) {
+                            auto observed = now_us() - age;
+                            chain.audio_progress(AudioClockSample{
+                                generation, segment.media + int64_t(frame - segment.begin) * 1000000 / 48000,
+                                observed, observed + int64_t(segment.end - frame) * 1000000 / 48000, position,
+                                d.frequency, segment.begin, segment.media});
+                            valid = true;
+                        }
                     }
                 }
+                if (!valid)
+                    chain.audio_unavailable(generation, "silence_or_unmapped_audio");
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
@@ -243,7 +304,6 @@ void Output::run(int seconds) {
         ShowWindow(p.window, SW_SHOWNOACTIVATE);
         ShowWindow(p.window, SW_SHOWNOACTIVATE);
     }
-    p.images.resize(p.app.chains.size());
     p.bitmaps.resize(p.app.chains.size());
     if (FAILED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, p.factory.GetAddressOf())))
         throw std::runtime_error("Direct2D factory creation failed");
@@ -257,6 +317,12 @@ void Output::run(int seconds) {
             p.surface.Get(), D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_SOFTWARE),
             p.renderer.GetAddressOf())))
         throw std::runtime_error("Direct2D output initialization failed");
+    if (FAILED(p.renderer->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &p.black)))
+        throw std::runtime_error("output brush creation failed");
+    p.renderer->BeginDraw();
+    p.renderer->Clear(D2D1::ColorF(D2D1::ColorF::Black));
+    if (FAILED(p.renderer->EndDraw()))
+        throw std::runtime_error("output surface initialization failed");
     p.audio_thread = std::thread([&p] { p.audio_loop(); });
     auto started = now_us();
     while (!p.app.quit) {
@@ -276,48 +342,55 @@ void Output::run(int seconds) {
         auto current = now_us();
         for (size_t i = 0; i < p.app.chains.size(); ++i) {
             auto &c = *p.app.chains[i];
-            std::lock_guard lock(c.mutex);
-            while (c.videos.size() > 1 && c.videos.front().due_us < current - 100000) {
+            std::unique_lock lock(c.mutex, std::try_to_lock);
+            if (!lock.owns_lock()) {
+                ++c.output_lock_skips;
+                continue;
+            }
+            while (!c.videos.empty() && (c.videos.front().generation != c.playback_generation ||
+                                         c.videos.front().due_us < current - 100000)) {
                 auto id = c.videos.front().frame_id;
-                for (auto &record : c.source)
-                    if (record->id == id) {
-                        record->frame.outcome = Outcome::presentation_dropped;
-                        break;
-                    }
+                c.discard_locked(id, "output_deadline_missed", c.videos.front().generation);
+                ++c.video_late_drops;
+                c.video_queue_bytes -= c.videos.front().bgra.size();
                 c.videos.pop_front();
             }
             if (!c.videos.empty() && c.videos.front().due_us <= current) {
                 auto image = std::move(c.videos.front());
+                c.video_queue_bytes -= image.bgra.size();
                 c.videos.pop_front();
                 updates.emplace_back(i, std::move(image));
                 changed = true;
             }
         }
         if (changed) {
+            auto render_start = now_us();
+            std::vector<bool> painted(p.app.chains.size(), false);
             p.renderer->BeginDraw();
-            p.renderer->Clear(D2D1::ColorF(D2D1::ColorF::Black));
-            for (auto &[i, image] : updates)
-                p.images[i] = std::move(image);
-            int cols = p.images.size() > 4 ? 4 : 2;
-            int rows = int((p.images.size() + cols - 1) / cols);
+            int cols = p.app.chains.size() > 4 ? 4 : 2;
+            int rows = int((p.app.chains.size() + cols - 1) / cols);
             int w = 1000 / cols, h = 600 / std::max(1, rows);
-            for (size_t i = 0; i < p.images.size(); ++i) {
-                if (!p.images[i])
-                    continue;
-                auto &v = *p.images[i];
-                if (!p.bitmaps[i] || p.bitmaps[i]->GetPixelSize().width != UINT32(v.width)) {
+            for (auto &[i, v] : updates) {
+                if (!p.bitmaps[i] || p.bitmaps[i]->GetPixelSize().width != UINT32(v.width) ||
+                    p.bitmaps[i]->GetPixelSize().height != UINT32(v.height)) {
                     p.bitmaps[i].Reset();
                     p.renderer->CreateBitmap(D2D1::SizeU(v.width, v.height), nullptr, 0,
                                              D2D1::BitmapProperties(D2D1::PixelFormat(
                                                  DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE)),
                                              p.bitmaps[i].GetAddressOf());
                 }
-                if (p.bitmaps[i]) {
-                    p.bitmaps[i]->CopyFromMemory(nullptr, v.bgra.data(), v.width * 4);
-                    p.renderer->DrawBitmap(p.bitmaps[i].Get(),
-                                           D2D1::RectF(float(i % cols * w), float(i / cols * h),
-                                                       float(i % cols * w + w), float(i / cols * h + h)));
-                }
+                if (p.bitmaps[i] &&
+                    SUCCEEDED(p.bitmaps[i]->CopyFromMemory(nullptr, v.bgra.data(), v.stride))) {
+                    auto x = float(i % cols * w), y = float(i / cols * h);
+                    p.renderer->FillRectangle(D2D1::RectF(x, y, x + w, y + h), p.black.Get());
+                    auto scale = std::min(float(w) / v.width, float(h) / v.height);
+                    auto rw = v.width * scale, rh = v.height * scale;
+                    p.renderer->DrawBitmap(
+                        p.bitmaps[i].Get(),
+                        D2D1::RectF(x + (w - rw) / 2, y + (h - rh) / 2, x + (w + rw) / 2, y + (h + rh) / 2));
+                    painted[i] = true;
+                } else
+                    p.app.chains[i]->did_drop(v.frame_id, "output_bitmap_failed", v.generation);
             }
             auto result = p.renderer->EndDraw();
             // Locking the WIC-backed software target confirms actual rendered pixels are available.
@@ -326,12 +399,14 @@ void Output::run(int seconds) {
             if (SUCCEEDED(result))
                 result = p.surface->Lock(&bounds, WICBitmapLockRead, &pixels);
             auto observed = now_us();
-            for (auto &[i, unused] : updates) {
-                auto &v = *p.images[i];
+            for (auto &[i, v] : updates) {
+                if (!painted[i])
+                    continue;
                 if (SUCCEEDED(result))
-                    p.app.chains[i]->did_present(v.frame_id, v.media_us, v.source_us, observed);
+                    p.app.chains[i]->did_present(v.frame_id, v.media_us, v.source_us, observed, v.generation,
+                                                 (observed - render_start) / 1000.0);
                 else
-                    p.app.chains[i]->did_drop(v.frame_id, "output_backend_failed");
+                    p.app.chains[i]->did_drop(v.frame_id, "output_backend_failed", v.generation);
             }
             if (pixels && !IsIconic(p.window) && IsWindowVisible(p.window)) {
                 UINT bytes{}, stride{};
@@ -360,6 +435,7 @@ void Output::run(int seconds) {
         p.audio_thread.join();
     DestroyWindow(p.window);
     p.bitmaps.clear();
+    p.black.Reset();
     p.renderer.Reset();
     p.surface.Reset();
     p.wic.Reset();

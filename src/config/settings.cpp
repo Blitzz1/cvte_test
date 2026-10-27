@@ -18,6 +18,17 @@ Settings parse_settings(const Json &j) {
     s.retention_days = j.value("retention_days", 7);
     s.resolution_timeout_ms = j.value("resolution_timeout_ms", 5000);
     s.webhook = j.value("webhook", std::string{});
+    s.output_width = j.value("output_width", 320);
+    s.output_height = j.value("output_height", 180);
+    s.video_queue_frames = j.value("video_queue_frames", 96);
+    s.video_queue_mib = j.value("video_queue_mib", 20);
+    s.video_total_mib = j.value("video_total_mib", 64);
+    s.decoder_threads = j.value("decoder_threads", 1);
+    if (s.output_width < 160 || s.output_width > 640 || s.output_height < 90 || s.output_height > 360 ||
+        s.video_queue_frames < 2 || s.video_queue_frames > 120 || s.video_queue_mib < 1 ||
+        s.video_queue_mib > 32 || s.video_total_mib < 8 || s.video_total_mib > 128 || s.decoder_threads < 1 ||
+        s.decoder_threads > 4)
+        throw std::runtime_error("playback resource setting out of range");
     auto pair = [](double a, double b, const char *name) {
         if (!std::isfinite(a) || !std::isfinite(b) || a < 0 || b <= a)
             throw std::runtime_error(std::string(name) + ": critical must exceed non-negative warning");

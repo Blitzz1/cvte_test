@@ -39,6 +39,12 @@
   "port": 8080,
   "revision": 3,
   "settings": {
+    "output_width": 320,
+    "output_height": 180,
+    "video_queue_frames": 96,
+    "video_queue_mib": 20,
+    "video_total_mib": 64,
+    "decoder_threads": 1,
     "delay_critical_ms": 1000,
     "delay_warning_ms": 400,
     "hold_ms": 3000,

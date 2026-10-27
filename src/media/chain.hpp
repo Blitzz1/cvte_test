@@ -8,6 +8,7 @@ struct SourceUnit {
     std::string signature;
     int64_t source_us{}, media_us{}, duration_us{};
     bool matched{};
+    std::optional<int64_t> received_media_us;
     FrameRecord frame;
 };
 class Chain {
@@ -23,6 +24,8 @@ class Chain {
     std::deque<AudioChunk> audio;
     std::deque<std::shared_ptr<SourceUnit>> source;
     std::unordered_map<std::string, std::vector<std::weak_ptr<SourceUnit>>> signatures;
+    std::unordered_map<uint64_t, std::weak_ptr<SourceUnit>> source_ids;
+    std::multimap<int64_t, std::weak_ptr<SourceUnit>> video_media_index;
     std::vector<SyncSample> sync_samples;
     FreezeTracker freeze;
     FaultConfig fault;
@@ -45,6 +48,15 @@ class Chain {
     int64_t last_audio_logged_us = 0;
     std::vector<AlertState> alarms{5};
     std::vector<Json> completed_freezes;
+    size_t video_queue_bytes = 0, video_queue_peak_bytes = 0;
+    uint64_t video_budget_drops = 0, video_late_drops = 0, timestamp_recovered = 0;
+    std::atomic<uint64_t> output_lock_skips{0};
+    double conversion_ms = 0, render_work_ms = 0;
+    std::optional<AudioClockSample> audio_sample;
+    uint64_t sync_segment = 0;
+    std::deque<int64_t> unmapped_outputs;
+    bool last_video_source_valid = false;
+    int64_t last_video_drop_us = 0;
     explicit Chain(Application &a, ChainConfig c);
     ~Chain();
     void start();
@@ -52,10 +64,13 @@ class Chain {
     void set_fault(const Json &j);
     Json snapshot();
     void tick();
-    void did_present(uint64_t id, int64_t media, int64_t source_time, int64_t observed);
-    void did_drop(uint64_t id, const std::string &reason);
-    void audio_progress(int64_t media, int64_t observed, uint64_t device_position = 0,
-                        uint64_t device_frequency = 0);
+    void did_present(uint64_t id, int64_t media, int64_t source_time, int64_t observed, uint64_t generation,
+                     double render_ms = 0);
+    void did_drop(uint64_t id, const std::string &reason, uint64_t generation);
+    void discard_locked(uint64_t id, const std::string &reason, uint64_t generation);
+    void reset_playback_locked(const std::string &reason);
+    void audio_unavailable(uint64_t generation, const std::string &reason);
+    void audio_progress(const AudioClockSample &sample);
     void rtp_frame_observed(const std::vector<uint8_t> &access_unit, size_t before, size_t after,
                             uint32_t timestamp);
     void injection_truth(const Json &value);
@@ -66,7 +81,8 @@ class Chain {
     void receive();
     std::shared_ptr<SourceUnit> match(const std::string &signature, bool video, int64_t pts);
     std::optional<int64_t> video_pts_offset_, audio_pts_offset_;
-    std::ofstream observations_, truth_;
+    int64_t last_video_match_us_ = 0;
+    std::shared_ptr<SourceUnit> match_damaged_pts(int64_t pts);
     void observe(const Json &j);
 };
 } // namespace avqm

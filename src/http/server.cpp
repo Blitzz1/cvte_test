@@ -102,6 +102,7 @@ void run_http(Application &app, int port) {
         std::filesystem::rename(temp, path);
         app.config = next;
         app.settings = validated;
+        app.video_budget->set_limit(size_t(validated.video_total_mib) * 1024 * 1024);
         Logger::instance().set_retention(validated.retention_days);
         Logger::instance().set_level(next.value("logging", Json::object()).value("level", "info"));
         respond(res, {{"saved", true},

@@ -5,6 +5,7 @@
 #include "media/chain.hpp"
 #include "media/rtsp_relay.hpp"
 #include "playback/output.hpp"
+#include "storage/observations.hpp"
 #include "storage/store.hpp"
 #include <httplib.h>
 #include <iostream>
@@ -24,6 +25,8 @@ Application::Application(std::filesystem::path r, std::filesystem::path config_p
     token = std::to_string(rd()) + std::to_string(rd());
     auto s = config.value("settings", Json::object());
     settings = parse_settings(s);
+    video_budget = std::make_shared<ByteBudget>(size_t(settings.video_total_mib) * 1024 * 1024);
+    journal = std::make_unique<ObservationJournal>(root / "data/observations");
     Logger::instance().set_retention(settings.retention_days);
     if (!config.contains("revision"))
         config["revision"] = 1;
@@ -55,6 +58,7 @@ Application::~Application() {
     relay.reset();
     output.reset();
     chains.clear();
+    journal.reset();
     Logger::instance().stop();
 }
 Settings Application::settings_copy() {

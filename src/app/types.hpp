@@ -38,6 +38,8 @@ struct Settings {
            av_lag_critical_ms = 185, drift_warning_ms_per_s = 1;
     int freeze_critical_ms = 1000, drift_hold_ms = 30000;
     int hold_ms = 3000, recovery_ms = 3000, retention_days = 7, resolution_timeout_ms = 5000;
+    int output_width = 320, output_height = 180, video_queue_frames = 96, video_queue_mib = 20,
+        video_total_mib = 64, decoder_threads = 1;
     std::string webhook;
 };
 Settings parse_settings(const Json &value);
@@ -55,26 +57,32 @@ struct ChainConfig {
     bool push_enabled = true, has_audio = true;
 };
 struct VideoImage {
-    int width{}, height{};
+    int width{}, height{}, stride{};
     std::vector<uint8_t> bgra;
     uint64_t frame_id{};
+    uint64_t generation{};
+    std::shared_ptr<ByteLease> pixel_lease;
     int64_t source_us{}, media_us{}, due_us{};
 };
 struct AudioChunk {
     std::vector<float> samples;
     int64_t media_us{}, due_us{};
     bool mapped{};
+    uint64_t generation{};
 };
 class Store;
 class Chain;
 class Output;
 class RtspRelay;
 class Services;
+class ObservationJournal;
 class Application {
   public:
     std::filesystem::path root;
     std::filesystem::path config_file;
     std::vector<std::shared_ptr<Chain>> chains;
+    std::shared_ptr<ByteBudget> video_budget;
+    std::unique_ptr<ObservationJournal> journal;
     std::unique_ptr<Store> store;
     std::unique_ptr<Output> output;
     std::unique_ptr<RtspRelay> relay;
