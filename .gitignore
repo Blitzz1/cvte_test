@@ -1,0 +1,12 @@
+/build/
+/build-core/
+/build-core-ninja/
+/runtime/
+/third_party/
+/web/vendor/
+/data/
+/artifacts/
+/.vs/
+*.user
+*.pdb
+*.obj
