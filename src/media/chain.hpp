@@ -40,8 +40,11 @@ class Chain {
     std::deque<std::pair<int64_t, double>> latency_samples;
     std::deque<int64_t> presentation_times;
     uint64_t received_video_units = 0;
+    uint64_t receiver_connection = 0;
+    std::deque<std::pair<int64_t, uint64_t>> byte_samples;
     int64_t last_audio_logged_us = 0;
     std::vector<AlertState> alarms{5};
+    std::vector<Json> completed_freezes;
     explicit Chain(Application &a, ChainConfig c);
     ~Chain();
     void start();

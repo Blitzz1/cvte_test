@@ -54,6 +54,8 @@ void Logger::write(int level, std::string message) {
     queue_.push_back(std::to_string(utc_ms()) + " level=" + std::to_string(level) + " " + message);
 }
 void Logger::loop() {
+    auto day = utc_ms() / 86400000;
+    int64_t next_prune = 0;
     while (true) {
         std::deque<std::string> batch;
         {
@@ -67,17 +69,23 @@ void Logger::loop() {
         for (auto &line : batch)
             file_ << line << (line.ends_with('\n') ? "" : "\n");
         file_.flush();
-        if (file_ && file_.tellp() > 10 * 1024 * 1024) {
+        if (file_ && (file_.tellp() > 10 * 1024 * 1024 || utc_ms() / 86400000 != day)) {
             file_.close();
             std::error_code ec;
-            std::filesystem::remove(directory_ / "runtime.log.5", ec);
-            for (int n = 4; n >= 1; --n) {
-                auto src = directory_ / ("runtime.log." + std::to_string(n));
-                if (std::filesystem::exists(src))
-                    std::filesystem::rename(src, directory_ / ("runtime.log." + std::to_string(n + 1)), ec);
-            }
-            std::filesystem::rename(directory_ / "runtime.log", directory_ / "runtime.log.1", ec);
+            std::filesystem::rename(directory_ / "runtime.log",
+                                    directory_ / ("runtime-" + std::to_string(utc_ms()) + ".log"), ec);
             file_.open(directory_ / "runtime.log", std::ios::app);
+            day = utc_ms() / 86400000;
+        }
+        if (now_us() >= next_prune) {
+            std::error_code ec;
+            for (auto &entry : std::filesystem::directory_iterator(directory_, ec)) {
+                if (entry.path().filename() != "runtime.log" && entry.is_regular_file(ec) &&
+                    std::filesystem::file_time_type::clock::now() - entry.last_write_time(ec) >
+                        std::chrono::hours(retention_days_ * 24))
+                    std::filesystem::remove(entry.path(), ec);
+            }
+            next_prune = now_us() + 60000000;
         }
         if (done_) {
             std::lock_guard lock(mutex_);

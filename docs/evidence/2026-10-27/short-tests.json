@@ -1,0 +1,515 @@
+{
+    "phase":  "af73d34 short tests; artifacts kept locally",
+    "results":  [
+                    {
+                        "chains":  [
+                                       {
+                                           "id":  "rtsp-udp",
+                                           "time_ms":  1793076209385,
+                                           "output_fps":  30.530932923540366,
+                                           "latency_ms":  410.7015806451613,
+                                           "av_offset_ms":  16.298,
+                                           "drift_ms_per_s":  0.04737602845058951,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtsp-tcp",
+                                           "time_ms":  1793076209385,
+                                           "output_fps":  30.076966958446665,
+                                           "latency_ms":  423.17641935483863,
+                                           "av_offset_ms":  16.133,
+                                           "drift_ms_per_s":  0.06925477929362131,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtmp-3",
+                                           "time_ms":  1793076209385,
+                                           "output_fps":  29.513235159422354,
+                                           "latency_ms":  372.3538333333334,
+                                           "av_offset_ms":  12.787,
+                                           "drift_ms_per_s":  0.048197049065924195,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtmp-4",
+                                           "time_ms":  1793076209385,
+                                           "output_fps":  29.513235159422354,
+                                           "latency_ms":  397.5557,
+                                           "av_offset_ms":  13.955,
+                                           "drift_ms_per_s":  0.030208665814336105,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-5",
+                                           "time_ms":  1793076209386,
+                                           "output_fps":  29.513235159422354,
+                                           "latency_ms":  413.7787666666666,
+                                           "av_offset_ms":  17.34,
+                                           "drift_ms_per_s":  -0.014096478503457063,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-6",
+                                           "time_ms":  1793076209386,
+                                           "output_fps":  29.94296381650952,
+                                           "latency_ms":  384.37179999999995,
+                                           "av_offset_ms":  12.332,
+                                           "drift_ms_per_s":  -0.020582453152337664,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-7",
+                                           "time_ms":  1793076209386,
+                                           "output_fps":  29.513235159422354,
+                                           "latency_ms":  422.8072666666666,
+                                           "av_offset_ms":  15.368,
+                                           "drift_ms_per_s":  0.012777970568266647,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-8",
+                                           "time_ms":  1793076209386,
+                                           "output_fps":  29.513235159422354,
+                                           "latency_ms":  392.4046333333334,
+                                           "av_offset_ms":  13.29,
+                                           "drift_ms_per_s":  0.006643640636805033,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       }
+                                   ],
+                        "name":  "baseline-current"
+                    },
+                    {
+                        "chains":  [
+                                       {
+                                           "id":  "rtsp-udp",
+                                           "time_ms":  1793076249295,
+                                           "output_fps":  30.16482057964719,
+                                           "latency_ms":  413.1377096774193,
+                                           "av_offset_ms":  18.772,
+                                           "drift_ms_per_s":  0.011050140879404723,
+                                           "loss_pct":  4.682274247491639,
+                                           "loss_reasons":  {
+                                                                "presented":  285,
+                                                                "transport_lost":  11,
+                                                                "unknown_missing":  3
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtsp-tcp",
+                                           "time_ms":  1793076249296,
+                                           "output_fps":  29.903165301604357,
+                                           "latency_ms":  420.23466666666667,
+                                           "av_offset_ms":  13.142,
+                                           "drift_ms_per_s":  -0.008247765108166006,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  299
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtmp-3",
+                                           "time_ms":  1793076249296,
+                                           "output_fps":  30.057078391866153,
+                                           "latency_ms":  372.4371612903225,
+                                           "av_offset_ms":  -338.409,
+                                           "drift_ms_per_s":  -5.414179308475788,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtmp-4",
+                                           "time_ms":  1793076249296,
+                                           "output_fps":  30.057078391866153,
+                                           "latency_ms":  395.7524193548387,
+                                           "av_offset_ms":  10.825,
+                                           "drift_ms_per_s":  -0.02821091708283427,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-5",
+                                           "time_ms":  1793076249296,
+                                           "output_fps":  30.057078391866153,
+                                           "latency_ms":  410.8629354838709,
+                                           "av_offset_ms":  16.5,
+                                           "drift_ms_per_s":  0.007395842207640553,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-6",
+                                           "time_ms":  1793076249297,
+                                           "output_fps":  30.58642616594929,
+                                           "latency_ms":  393.0283,
+                                           "av_offset_ms":  20.537,
+                                           "drift_ms_per_s":  0.0764950696283495,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-7",
+                                           "time_ms":  1793076249297,
+                                           "output_fps":  30.057078391866153,
+                                           "latency_ms":  423.118064516129,
+                                           "av_offset_ms":  17.994,
+                                           "drift_ms_per_s":  0.055902338105257084,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-8",
+                                           "time_ms":  1793076249297,
+                                           "output_fps":  30.057078391866153,
+                                           "latency_ms":  394.17793548387095,
+                                           "av_offset_ms":  10.147,
+                                           "drift_ms_per_s":  -0.030481775966238866,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  299
+                                                            }
+                                       }
+                                   ],
+                        "name":  "audio-delay-current"
+                    },
+                    {
+                        "chains":  [
+                                       {
+                                           "id":  "rtsp-udp",
+                                           "time_ms":  1793076261881,
+                                           "output_fps":  29.032516418388596,
+                                           "latency_ms":  413.99593333333337,
+                                           "av_offset_ms":  18.33,
+                                           "drift_ms_per_s":  0.00597636177322328,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtsp-tcp",
+                                           "time_ms":  1793076261881,
+                                           "output_fps":  29.032516418388596,
+                                           "latency_ms":  423.83529999999996,
+                                           "av_offset_ms":  20.333,
+                                           "drift_ms_per_s":  0.011999041388873763,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtmp-3",
+                                           "time_ms":  1793076261882,
+                                           "output_fps":  29.032516418388596,
+                                           "latency_ms":  377.44853333333333,
+                                           "av_offset_ms":  19.99,
+                                           "drift_ms_per_s":  -3.0330187715461645,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtmp-4",
+                                           "time_ms":  1793076261882,
+                                           "output_fps":  29.815299361027293,
+                                           "latency_ms":  399.5653333333333,
+                                           "av_offset_ms":  18.899,
+                                           "drift_ms_per_s":  -0.029492119350775368,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-5",
+                                           "time_ms":  1793076261882,
+                                           "output_fps":  30.0336376741951,
+                                           "latency_ms":  410.5930000000001,
+                                           "av_offset_ms":  18.038,
+                                           "drift_ms_per_s":  -0.004363712287470955,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-6",
+                                           "time_ms":  1793076261882,
+                                           "output_fps":  30.0336376741951,
+                                           "latency_ms":  396.3374838709677,
+                                           "av_offset_ms":  19.218,
+                                           "drift_ms_per_s":  0.10473751452936382,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-7",
+                                           "time_ms":  1793076261882,
+                                           "output_fps":  29.815299361027293,
+                                           "latency_ms":  422.3440666666667,
+                                           "av_offset_ms":  15.011,
+                                           "drift_ms_per_s":  0.004178934672919555,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-8",
+                                           "time_ms":  1793076261883,
+                                           "output_fps":  29.815299361027293,
+                                           "latency_ms":  396.6806666666666,
+                                           "av_offset_ms":  17.22,
+                                           "drift_ms_per_s":  -0.03283458693353896,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       }
+                                   ],
+                        "name":  "recovery-current"
+                    },
+                    {
+                        "chains":  [
+                                       {
+                                           "id":  "rtsp-udp",
+                                           "time_ms":  1793076274544,
+                                           "output_fps":  30.154360169708738,
+                                           "latency_ms":  411.26558064516144,
+                                           "av_offset_ms":  18.965,
+                                           "drift_ms_per_s":  -0.0038508973099077013,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtsp-tcp",
+                                           "time_ms":  1793076274544,
+                                           "output_fps":  30.154360169708738,
+                                           "latency_ms":  421.5772903225807,
+                                           "av_offset_ms":  18.382,
+                                           "drift_ms_per_s":  -0.04452600654933029,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtmp-3",
+                                           "time_ms":  1793076274544,
+                                           "output_fps":  30.154360169708738,
+                                           "latency_ms":  372.87083870967723,
+                                           "av_offset_ms":  17.06,
+                                           "drift_ms_per_s":  0.015677775293789883,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtmp-4",
+                                           "time_ms":  1793076274545,
+                                           "output_fps":  30.154360169708738,
+                                           "latency_ms":  1201.572677419355,
+                                           "av_offset_ms":  819.895,
+                                           "drift_ms_per_s":  12.147441098686297,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-5",
+                                           "time_ms":  1793076274545,
+                                           "output_fps":  30.069543596172252,
+                                           "latency_ms":  411.4561666666666,
+                                           "av_offset_ms":  14.842,
+                                           "drift_ms_per_s":  -0.025097949109005112,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-6",
+                                           "time_ms":  1793076274545,
+                                           "output_fps":  30.069543596172252,
+                                           "latency_ms":  388.1706333333333,
+                                           "av_offset_ms":  12.492,
+                                           "drift_ms_per_s":  0.045832556565703744,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-7",
+                                           "time_ms":  1793076274545,
+                                           "output_fps":  29.578858256071317,
+                                           "latency_ms":  414.9110333333334,
+                                           "av_offset_ms":  14.332,
+                                           "drift_ms_per_s":  -0.019837083607858977,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-8",
+                                           "time_ms":  1793076274545,
+                                           "output_fps":  30.154360169708738,
+                                           "latency_ms":  395.00990322580645,
+                                           "av_offset_ms":  15.463,
+                                           "drift_ms_per_s":  -0.059168037858111415,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       }
+                                   ],
+                        "name":  "video-delay-current"
+                    },
+                    {
+                        "chains":  [
+                                       {
+                                           "id":  "rtsp-udp",
+                                           "time_ms":  1793076700235,
+                                           "output_fps":  30.211328241046118,
+                                           "latency_ms":  408.56932258064523,
+                                           "av_offset_ms":  16.367,
+                                           "drift_ms_per_s":  -0.022739762274043996,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtsp-tcp",
+                                           "time_ms":  1793076700235,
+                                           "output_fps":  24.465118060150154,
+                                           "latency_ms":  207.5188750000001,
+                                           "av_offset_ms":  -9.407,
+                                           "drift_ms_per_s":  null,
+                                           "loss_pct":  7.5,
+                                           "loss_reasons":  {
+                                                                "presented":  222,
+                                                                "unknown_missing":  18
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtmp-3",
+                                           "time_ms":  1793076700236,
+                                           "output_fps":  24.465118060150154,
+                                           "latency_ms":  165.43266666666668,
+                                           "av_offset_ms":  -32.952,
+                                           "drift_ms_per_s":  null,
+                                           "loss_pct":  15.0,
+                                           "loss_reasons":  {
+                                                                "presentation_dropped":  2,
+                                                                "presented":  204,
+                                                                "unknown_missing":  34
+                                                            }
+                                       },
+                                       {
+                                           "id":  "rtmp-4",
+                                           "time_ms":  1793076700236,
+                                           "output_fps":  30.211328241046118,
+                                           "latency_ms":  395.5390967741935,
+                                           "av_offset_ms":  16.154,
+                                           "drift_ms_per_s":  -0.02583547027659511,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-5",
+                                           "time_ms":  1793076700236,
+                                           "output_fps":  30.211328241046118,
+                                           "latency_ms":  420.48812903225803,
+                                           "av_offset_ms":  -360.436,
+                                           "drift_ms_per_s":  -4.920616758938105,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-6",
+                                           "time_ms":  1793076700236,
+                                           "output_fps":  30.211328241046118,
+                                           "latency_ms":  382.7815806451612,
+                                           "av_offset_ms":  16.149,
+                                           "drift_ms_per_s":  -0.0187020343754552,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-7",
+                                           "time_ms":  1793076700236,
+                                           "output_fps":  30.211328241046118,
+                                           "latency_ms":  405.76406451612905,
+                                           "av_offset_ms":  18.258,
+                                           "drift_ms_per_s":  -0.029206266749734817,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       },
+                                       {
+                                           "id":  "chain-8",
+                                           "time_ms":  1793076700237,
+                                           "output_fps":  31.008521141609716,
+                                           "latency_ms":  386.0619677419356,
+                                           "av_offset_ms":  16.495,
+                                           "drift_ms_per_s":  -0.04831116367293682,
+                                           "loss_pct":  0.0,
+                                           "loss_reasons":  {
+                                                                "presented":  300
+                                                            }
+                                       }
+                                   ],
+                        "name":  "drift-and-ordinary-loop"
+                    }
+                ]
+}

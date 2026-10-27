@@ -73,7 +73,7 @@
     }
   ],
   "port": 8080,
-  "revision": 4,
+  "revision": 6,
   "settings": {
     "delay_critical_ms": 1000,
     "delay_warning_ms": 400,

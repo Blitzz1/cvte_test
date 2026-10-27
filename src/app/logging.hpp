@@ -7,6 +7,9 @@ class Logger {
     void initialize(const std::filesystem::path &root, const std::string &level);
     void write(int level, std::string message);
     void set_level(const std::string &level);
+    void set_retention(int days) {
+        retention_days_ = days;
+    }
     void stop();
     ~Logger();
 
@@ -18,6 +21,7 @@ class Logger {
     std::thread worker_;
     std::atomic<bool> done_{false};
     std::atomic<int> level_{32};
+    std::atomic<int> retention_days_{7};
     uint64_t dropped_{};
     void loop();
 };

@@ -60,11 +60,19 @@ std::string Store::event(const std::string &c, const std::string &t, const Json 
 Json Store::history(const std::string &c, int64_t from, int64_t to, int limit) {
     std::lock_guard lock(mutex_);
     sqlite3_stmt *st{};
-    int64_t bucket = std::max<int64_t>(1000, (to - from) / std::clamp(limit, 10, 5000));
-    sqlite3_prepare_v2(db_,
-                       "SELECT time_ms,payload FROM samples WHERE chain=? AND time_ms>=? AND time_ms<? GROUP "
-                       "BY (time_ms/? ) ORDER BY time_ms LIMIT 5000",
-                       -1, &st, nullptr);
+    int64_t bucket = std::max<int64_t>(1000, (to - from) / std::max(1, std::clamp(limit, 10, 5000) / 4));
+    sqlite3_prepare_v2(
+        db_,
+        "WITH selected AS (SELECT time_ms,payload,time_ms/?4 AS bucket FROM samples WHERE chain=?1 AND "
+        "time_ms>=?2 AND time_ms<?3), "
+        "ranked AS (SELECT *,row_number() OVER(PARTITION BY bucket ORDER BY "
+        "json_extract(payload,'$.latency_ms') DESC) AS a, "
+        "row_number() OVER(PARTITION BY bucket ORDER BY json_extract(payload,'$.av_offset_ms') DESC) AS b, "
+        "row_number() OVER(PARTITION BY bucket ORDER BY json_extract(payload,'$.av_offset_ms') ASC) AS c, "
+        "row_number() OVER(PARTITION BY bucket ORDER BY json_extract(payload,'$.loss_pct') DESC) AS d FROM "
+        "selected) "
+        "SELECT time_ms,payload FROM ranked WHERE a=1 OR b=1 OR c=1 OR d=1 ORDER BY time_ms LIMIT 5000",
+        -1, &st, nullptr);
     sqlite3_bind_text(st, 1, c.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_int64(st, 2, from);
     sqlite3_bind_int64(st, 3, to);

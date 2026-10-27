@@ -1,0 +1,14 @@
+﻿[
+    {
+        "name":  "invalid_threshold",
+        "status":  400
+    },
+    {
+        "name":  "revision_conflict",
+        "status":  409
+    },
+    {
+        "name":  "history_24h",
+        "points":  107
+    }
+]

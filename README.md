@@ -50,3 +50,5 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/stop.ps1
 | `web`、`tests`、`scripts` | 离线看板、测试、构建及验证工具 |
 
 交付文档：[需求基线](docs/需求与验收基线.md)、[可行性分析](docs/可行性分析报告.md)、[设计](docs/设计文档.md)、[实施对照](docs/实施状态与接口.md)、[测试记录](docs/测试计划与记录.md)、[工作流程](docs/工作流程与交付计划.md)、[依赖](docs/依赖与运行环境.md)。实施状态及测试记录列明已验证范围与未完成项，不把接口存在等同于验收通过。
+
+逐项进度见[需求追踪](docs/需求追踪与验收状态.md)，现场操作见[演示指南](docs/现场演示指南.md)，素材来源与许可见[第三方说明](docs/第三方组件与素材.md)。

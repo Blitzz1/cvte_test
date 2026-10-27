@@ -24,6 +24,7 @@ Application::Application(std::filesystem::path r, std::filesystem::path config_p
     token = std::to_string(rd()) + std::to_string(rd());
     auto s = config.value("settings", Json::object());
     settings = parse_settings(s);
+    Logger::instance().set_retention(settings.retention_days);
     if (!config.contains("revision"))
         config["revision"] = 1;
     store = std::make_unique<Store>(root / "data/quality.db");
@@ -80,7 +81,12 @@ void Application::event(std::string chain, std::string type, Json payload) {
         auto url = settings_copy().webhook;
         if (!url.empty()) { // bounded delivery handled by the independent notification worker added after
                             // media validation
-            services->notify({{"event_id", id}, {"chain", chain}, {"type", type}, {"payload", payload}}, url);
+            services->notify({{"event_id", id},
+                              {"time_ms", utc_ms()},
+                              {"chain", chain},
+                              {"type", type},
+                              {"payload", payload}},
+                             url);
         }
     }
 }
@@ -119,6 +125,19 @@ int main(int argc, char **argv) {
                 if (now_us() >= next_prune) {
                     try {
                         app.store->prune(app.settings_copy().retention_days);
+                        auto directory = app.root / "data/observations";
+                        auto relative = std::filesystem::weakly_canonical(directory).lexically_relative(
+                            std::filesystem::weakly_canonical(app.root));
+                        if (!relative.empty() && *relative.begin() != "..") {
+                            for (auto &entry : std::filesystem::directory_iterator(directory)) {
+                                if (entry.is_regular_file() &&
+                                    std::filesystem::file_time_type::clock::now() - entry.last_write_time() >
+                                        std::chrono::hours(app.settings_copy().retention_days * 24)) {
+                                    std::error_code ignored;
+                                    std::filesystem::remove(entry.path(), ignored);
+                                }
+                            }
+                        }
                     } catch (const std::exception &e) {
                         Logger::instance().write(16, e.what());
                     }

@@ -134,6 +134,11 @@ Chain::~Chain() {
     stop();
 }
 void Chain::observe(const Json &j) {
+    if (observations_.is_open() && observations_.tellp() > 100 * 1024 * 1024) {
+        observations_.close();
+        observations_.open(app.root / "data/observations" /
+                           (session + "-part-" + std::to_string(utc_ms()) + ".jsonl"));
+    }
     if (observations_.is_open())
         observations_ << j.dump() << '\n';
 }
@@ -162,11 +167,14 @@ void Chain::start() {
         latency_samples.clear();
         presentation_times.clear();
         received_video_units = 0;
+        receiver_connection = 0;
+        byte_samples.clear();
         rtp_packets_received = rtp_packets_lost = rtp_packets_duplicates = 0;
         session_max_consecutive = 0;
         video_pts_offset_.reset();
         audio_pts_offset_.reset();
         freeze.reset();
+        completed_freezes.clear();
         sent = matched_video = decoded = presented = ambiguous = received_bytes = source_sequence = 0;
         playback_anchor_us = 0;
         first_present_source_us = 0;
@@ -277,20 +285,44 @@ void Chain::publish() {
                 throw std::runtime_error("publish header: " + av_error(rc));
             wrote_header = true;
             publisher_ready = true;
-            int64_t first_dts = INT64_MIN, origin = now_us();
-            while (!stop_requested && (rc = av_read_frame(input, p)) >= 0) {
+            int64_t first_dts = INT64_MIN, origin = now_us(), epoch_offset = 0, epoch_end = 0;
+            bool epoch_has_packets = false;
+            while (!stop_requested) {
+                rc = av_read_frame(input, p);
+                if (rc < 0) {
+                    if (rc == AVERROR_EOF && epoch_has_packets &&
+                        av_seek_frame(input, -1, 0, AVSEEK_FLAG_BACKWARD) >= 0) {
+                        avformat_flush(input);
+                        epoch_offset = epoch_end;
+                        epoch_has_packets = false;
+                        std::lock_guard lock(mutex);
+                        observe({{"stage", "source_loop"},
+                                 {"mono_us", now_us()},
+                                 {"media_epoch_offset_us", epoch_offset}});
+                        continue;
+                    }
+                    throw std::runtime_error("source read: " + av_error(rc));
+                }
                 int idx = p->stream_index;
                 if (stream_map[idx] < 0) {
                     av_packet_unref(p);
                     continue;
                 }
                 auto *s = input->streams[idx];
+                auto shift = av_rescale_q(epoch_offset, AV_TIME_BASE_Q, s->time_base);
+                if (p->pts != AV_NOPTS_VALUE)
+                    p->pts += shift;
+                if (p->dts != AV_NOPTS_VALUE)
+                    p->dts += shift;
                 auto media = to_us(p->pts, s->time_base);
                 auto decode_time = to_us(p->dts == AV_NOPTS_VALUE ? p->pts : p->dts, s->time_base);
                 if (decode_time == INT64_MIN || media == INT64_MIN) {
                     av_packet_unref(p);
                     continue;
                 }
+                epoch_has_packets = true;
+                epoch_end =
+                    std::max(epoch_end, media + std::max<int64_t>(1, to_us(p->duration, s->time_base)));
                 if (first_dts == INT64_MIN)
                     first_dts = decode_time;
                 wait_until(origin + decode_time - first_dts, stop_requested);
@@ -345,31 +377,24 @@ void Chain::publish() {
                     throw std::runtime_error("publish write: " + av_error(rc));
                 }
             }
-            if (!stop_requested) { // Loop the original file as a fresh epoch; reset matching/playout to avoid
-                                   // timestamp aliasing.
-                std::lock_guard lock(mutex);
-                source.clear();
-                signatures.clear();
-                video_pts_offset_.reset();
-                audio_pts_offset_.reset();
-                playback_anchor_us = 0;
-                first_present_source_us = 0;
-                ++playback_generation;
-                state = "warming_up";
-                freeze.reset();
-                last_present_us = 0;
-                audio_clock_observed_us = 0;
-                av_offset_ms.reset();
-                latency_ms.reset();
-                sync_samples.clear();
-                videos.clear();
-                audio.clear();
-                observe({{"stage", "source_loop"}, {"mono_us", now_us()}});
-            }
         } catch (const std::exception &e) {
             std::lock_guard lock(mutex);
             error = e.what();
             state = "reconnecting";
+            source.clear();
+            signatures.clear();
+            video_pts_offset_.reset();
+            audio_pts_offset_.reset();
+            videos.clear();
+            audio.clear();
+            playback_anchor_us = 0;
+            first_present_source_us = 0;
+            ++playback_generation;
+            audio_clock_observed_us = 0;
+            last_present_us = 0;
+            sync_samples.clear();
+            latency_samples.clear();
+            freeze.reset();
         }
         publisher_ready = false;
         if (output) {
@@ -441,6 +466,8 @@ void Chain::receive() {
                 av_dict_set(&opts, "buffer_size", "4194304", 0);
             }
             av_dict_set(&opts, "rw_timeout", "3000000", 0);
+            if (cfg.protocol == "httpflv")
+                av_dict_set(&opts, "seekable", "0", 0);
             av_dict_set(&opts, "analyzeduration", "100000", 0);
             av_dict_set(&opts, "probesize", "131072", 0);
             int rc = avformat_open_input(&in, cfg.pull_url.c_str(), nullptr, &opts);
@@ -449,6 +476,23 @@ void Chain::receive() {
                 throw std::runtime_error("pull open: " + av_error(rc));
             if (avformat_find_stream_info(in, nullptr) < 0)
                 throw std::runtime_error("pull stream info failed");
+            {
+                std::lock_guard lock(mutex);
+                ++receiver_connection;
+                session_max_consecutive = 0;
+                first_present_source_us = 0;
+                playback_anchor_us = 0;
+                videos.clear();
+                audio.clear();
+                sync_samples.clear();
+                audio_clock_observed_us = 0;
+                last_present_us = 0;
+                freeze.reset();
+                ++playback_generation;
+                observe({{"stage", "receiver_connected"},
+                         {"connection", receiver_connection},
+                         {"mono_us", now_us()}});
+            }
             codecs.resize(in->nb_streams, nullptr);
             for (unsigned i = 0; i < in->nb_streams; ++i) {
                 auto *par = in->streams[i]->codecpar;
@@ -500,6 +544,10 @@ void Chain::receive() {
                 {
                     std::lock_guard lock(mutex);
                     received_bytes += p->size;
+                    auto receive_time = now_us();
+                    byte_samples.emplace_back(receive_time, uint64_t(p->size));
+                    while (!byte_samples.empty() && receive_time - byte_samples.front().first > 1000000)
+                        byte_samples.pop_front();
                     if (video && !sig.empty())
                         ++received_video_units;
                     unit = match(sig, video, pts);
@@ -712,6 +760,14 @@ void Chain::did_drop(uint64_t id, const std::string &reason) {
 void Chain::did_present(uint64_t id, int64_t media, int64_t source_time, int64_t observed) {
     std::lock_guard lock(mutex);
     ++presented;
+    if (state == "running" && last_present_us && observed - last_present_us >= freeze.threshold_ms() * 1000) {
+        completed_freezes.push_back(
+            {{"start_mono_us", last_present_us},
+             {"end_mono_us", observed},
+             {"interval_ms", (observed - last_present_us) / 1000.0},
+             {"threshold_ms", freeze.threshold_ms()},
+             {"excess_ms", (observed - last_present_us) / 1000.0 - freeze.threshold_ms()}});
+    }
     last_video_media = media;
     last_present_us = observed;
     if (audio_clock_media && observed >= audio_clock_observed_us &&
@@ -806,6 +862,10 @@ Json Chain::snapshot() {
         }
     }
     session_max_consecutive = std::max<uint64_t>(session_max_consecutive, loss.consecutive_max);
+    uint64_t recent_bytes = 0;
+    for (auto [time, bytes] : byte_samples)
+        if (now - time <= 1000000)
+            recent_bytes += bytes;
     Json j = {
         {"id", cfg.id},
         {"alias", cfg.alias},
@@ -814,13 +874,14 @@ Json Chain::snapshot() {
         {"state", state},
         {"error", error},
         {"session", session},
+        {"receiver_connection", receiver_connection},
         {"time_ms", utc_ms()},
+        {"mono_us", now},
         {"width", width},
         {"height", height},
         {"fps", fps},
         {"audio_sample_rate", sample_rate},
-        {"bitrate_kbps",
-         started_us ? (received_bytes * 8.0 / 1000) / std::max(0.1, (now - started_us) / 1000000.0) : 0},
+        {"bitrate_kbps", recent_bytes * 8.0 / 1000},
         {"uptime_s", started_us ? (now - started_us) / 1000000.0 : 0},
         {"sent_frames", sent},
         {"matched_frames", matched_video},
@@ -852,7 +913,17 @@ Json Chain::snapshot() {
         {"loss_missing", loss.missing},
         {"loss_pending", loss.pending},
         {"loss_reasons", loss.reasons},
+        {"loss_unknown", loss.reasons.count("unknown_missing") ? loss.reasons.at("unknown_missing") : 0},
+        {"loss_validity",
+         loss.reasons.count("unknown_missing") ? "upper_bound_unassociated" : "resolved_source_frames"},
+        {"loss_confirmed_pct", loss.expected ? Json(100.0 *
+                                                    (loss.missing - (loss.reasons.count("unknown_missing")
+                                                                         ? loss.reasons.at("unknown_missing")
+                                                                         : 0)) /
+                                                    loss.expected)
+                                             : Json(nullptr)},
         {"consecutive_max", session_max_consecutive},
+        {"window_consecutive_max", loss.consecutive_max},
         {"freeze_ms", freeze.stalled_ms(now)},
         {"frozen", freeze.frozen(now)},
         {"freeze_count", freeze.completed_count},
@@ -881,6 +952,13 @@ Json Chain::snapshot() {
 }
 void Chain::tick() {
     auto j = snapshot();
+    std::vector<Json> freezes;
+    {
+        std::lock_guard lock(mutex);
+        freezes.swap(completed_freezes);
+    }
+    for (auto &event : freezes)
+        app.event(cfg.id, "freeze", event);
     auto settings = app.settings_copy();
     std::vector<std::optional<Level>> targets(5);
     if (j["latency_ms"].is_number() && j["output_validity"] != "stale") {
@@ -923,6 +1001,17 @@ void Chain::tick() {
                       {{"metric", names[i]},
                        {"transition", change->transition},
                        {"level", level_name(change->after)},
+                       {"thresholds",
+                        {{"delay_warning_ms", settings.delay_warning_ms},
+                         {"delay_critical_ms", settings.delay_critical_ms},
+                         {"loss_warning_pct", settings.loss_warning_pct},
+                         {"loss_critical_pct", settings.loss_critical_pct},
+                         {"av_lead_warning_ms", settings.av_lead_warning_ms},
+                         {"av_lag_warning_ms", settings.av_lag_warning_ms},
+                         {"av_lead_critical_ms", settings.av_lead_critical_ms},
+                         {"av_lag_critical_ms", settings.av_lag_critical_ms},
+                         {"freeze_critical_ms", settings.freeze_critical_ms},
+                         {"drift_warning_ms_per_s", settings.drift_warning_ms_per_s}}},
                        {"snapshot", j}});
     }
     app.store->sample(j);

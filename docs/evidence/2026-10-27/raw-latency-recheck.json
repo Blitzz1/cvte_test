@@ -1,0 +1,38 @@
+﻿[
+    {
+        "passed":  true,
+        "chain":  "rtsp-udp",
+        "reported_ms":  413.7218709677419,
+        "difference_ms":  0.0000000000001,
+        "raw_samples":  31,
+        "recomputed_ms":  413.72187096774189,
+        "snapshot_mono_us":  103494103923,
+        "session":  "rtsp-udp-1793082334598"
+    },
+    {
+        "passed":  true,
+        "chain":  "rtsp-tcp",
+        "reported_ms":  395.3612580645161,
+        "difference_ms":  0.0000000000001,
+        "raw_samples":  31,
+        "recomputed_ms":  395.36125806451611,
+        "snapshot_mono_us":  103494104121,
+        "session":  "rtsp-tcp-1793082334606"
+    },
+    {
+        "passed":  true,
+        "chain":  "rtmp-3",
+        "reported_ms":  372.8821612903226,
+        "difference_ms":  0.0000000000004,
+        "raw_samples":  31,
+        "recomputed_ms":  372.88216129032259,
+        "snapshot_mono_us":  103494104324,
+        "session":  "rtmp-3-1793082334609"
+    },
+    {
+        "passed":  null,
+        "status":  "not_applicable",
+        "reason":  "missing_source_reference",
+        "chain":  "rtmp-4"
+    }
+]

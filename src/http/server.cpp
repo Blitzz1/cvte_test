@@ -1,30 +1,42 @@
 #include "http/server.hpp"
 #include "app/logging.hpp"
 #include "app/services.hpp"
+#include "http/flv.hpp"
 #include "media/chain.hpp"
 #include "playback/output.hpp"
 #include "storage/store.hpp"
 #include <httplib.h>
 namespace avqm {
 static httplib::Server *active_server = nullptr;
+static std::mutex server_mutex;
 static void respond(httplib::Response &res, const Json &value, int code = 200) {
     res.status = code;
     res.set_content(value.dump(), "application/json; charset=utf-8");
     res.set_header("Cache-Control", "no-store");
 }
 void stop_http() {
+    std::lock_guard lock(server_mutex);
     if (active_server)
         active_server->stop();
 }
 void run_http(Application &app, int port) {
     httplib::Server server;
-    active_server = &server;
-    server.new_task_queue = [] { return new httplib::ThreadPool(6); };
+    {
+        std::lock_guard lock(server_mutex);
+        active_server = &server;
+    }
+    server.new_task_queue = [] { return new httplib::ThreadPool(16); };
     server.set_payload_max_length(1024 * 1024);
     server.set_read_timeout(5, 0);
     server.set_write_timeout(5, 0);
     server.set_mount_point("/", (app.root / "web").string());
+    install_flv_route(server, app);
     server.set_pre_routing_handler([&](const httplib::Request &req, httplib::Response &res) {
+        auto host = req.get_header_value("Host");
+        if (host != "127.0.0.1:" + std::to_string(port) && host != "localhost:" + std::to_string(port)) {
+            respond(res, {{"error", "local host required"}}, 403);
+            return httplib::Server::HandlerResponse::Handled;
+        }
         if (req.method != "GET" && req.path != "/webhook-demo" &&
             req.get_header_value("X-AVQM-Token") != app.token) {
             respond(res, {{"error", "invalid token"}}, 403);
@@ -90,6 +102,7 @@ void run_http(Application &app, int port) {
         std::filesystem::rename(temp, path);
         app.config = next;
         app.settings = validated;
+        Logger::instance().set_retention(validated.retention_days);
         Logger::instance().set_level(next.value("logging", Json::object()).value("level", "info"));
         respond(res, {{"saved", true},
                       {"revision", next["revision"]},
@@ -166,6 +179,9 @@ void run_http(Application &app, int port) {
         std::cerr << "HTTP bind failed: " << port << '\n';
         app.quit = true;
     }
-    active_server = nullptr;
+    {
+        std::lock_guard lock(server_mutex);
+        active_server = nullptr;
+    }
 }
 } // namespace avqm
