@@ -10,3 +10,5 @@
 *.user
 *.pdb
 *.obj
+/auto.key
+/auto.crt

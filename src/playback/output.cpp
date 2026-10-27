@@ -1,0 +1,369 @@
+#include "playback/output.hpp"
+#include "media/chain.hpp"
+#include <audioclient.h>
+#include <d2d1.h>
+#include <dwmapi.h>
+#include <mmdeviceapi.h>
+#include <wincodec.h>
+#include <windows.h>
+#include <wrl/client.h>
+using Microsoft::WRL::ComPtr;
+namespace avqm {
+struct Output::Impl {
+    Application &app;
+    HWND window{};
+    std::vector<std::optional<VideoImage>> images;
+    ComPtr<ID2D1Factory> factory;
+    ComPtr<ID2D1RenderTarget> renderer;
+    ComPtr<IWICImagingFactory> wic;
+    ComPtr<IWICBitmap> surface;
+    std::vector<ComPtr<ID2D1Bitmap>> bitmaps;
+    std::atomic<int> selected_audio{-1};
+    std::thread audio_thread;
+    std::atomic<bool> done{false};
+    explicit Impl(Application &a) : app(a) {}
+    static LRESULT CALLBACK window_proc(HWND w, UINT msg, WPARAM wp, LPARAM lp) {
+        if (msg == WM_CLOSE) {
+            DestroyWindow(w);
+            return 0;
+        }
+        if (msg == WM_DESTROY) {
+            PostQuitMessage(0);
+            return 0;
+        }
+        return DefWindowProc(w, msg, wp, lp);
+    }
+    struct AudioDevice {
+        ComPtr<IMMDeviceEnumerator> enumerator;
+        ComPtr<IMMDevice> device;
+        ComPtr<IAudioClient> client;
+        ComPtr<IAudioRenderClient> render;
+        ComPtr<IAudioClock> clock;
+        ComPtr<ISimpleAudioVolume> volume;
+        UINT32 capacity{};
+        UINT64 frequency{};
+        uint64_t submitted{};
+        uint64_t generation = 0;
+        int last_audio_selection = -2;
+        struct Segment {
+            uint64_t begin{}, end{};
+            int64_t media{};
+        };
+        std::deque<Segment> segments;
+        std::optional<AudioChunk> chunk;
+        size_t offset{};
+        bool init() {
+            if (FAILED(CoCreateInstance(__uuidof(MMDeviceEnumerator), nullptr, CLSCTX_ALL,
+                                        IID_PPV_ARGS(&enumerator))))
+                return false;
+            if (FAILED(enumerator->GetDefaultAudioEndpoint(eRender, eConsole, &device)))
+                return false;
+            if (FAILED(device->Activate(__uuidof(IAudioClient), CLSCTX_ALL, nullptr, &client)))
+                return false;
+            WAVEFORMATEX f{};
+            f.wFormatTag = WAVE_FORMAT_IEEE_FLOAT;
+            f.nChannels = 2;
+            f.nSamplesPerSec = 48000;
+            f.wBitsPerSample = 32;
+            f.nBlockAlign = 8;
+            f.nAvgBytesPerSec = 384000;
+            GUID audio_session{};
+            CoCreateGuid(&audio_session);
+            if (FAILED(client->Initialize(AUDCLNT_SHAREMODE_SHARED,
+                                          AUDCLNT_STREAMFLAGS_AUTOCONVERTPCM |
+                                              AUDCLNT_STREAMFLAGS_SRC_DEFAULT_QUALITY,
+                                          1000000, 0, &f, &audio_session)))
+                return false;
+            if (FAILED(client->GetBufferSize(&capacity)) ||
+                FAILED(client->GetService(IID_PPV_ARGS(&render))) ||
+                FAILED(client->GetService(IID_PPV_ARGS(&clock))))
+                return false;
+            client->GetService(IID_PPV_ARGS(&volume));
+            if (FAILED(clock->GetFrequency(&frequency)))
+                return false;
+            BYTE *initial{};
+            if (FAILED(render->GetBuffer(capacity, &initial)))
+                return false;
+            std::memset(initial, 0, size_t(capacity) * 8);
+            render->ReleaseBuffer(capacity, AUDCLNT_BUFFERFLAGS_SILENT);
+            submitted = capacity;
+            return SUCCEEDED(client->Start());
+        }
+        ~AudioDevice() {
+            if (client)
+                client->Stop();
+        }
+    };
+    void audio_loop() {
+        CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+        std::vector<std::unique_ptr<AudioDevice>> devices(app.chains.size());
+        for (size_t i = 0; i < devices.size(); ++i) {
+            auto d = std::make_unique<AudioDevice>();
+            if (d->init())
+                devices[i] = std::move(d);
+            else {
+                std::lock_guard lock(app.chains[i]->mutex);
+                app.chains[i]->audio_validity = "audio_device_unavailable";
+            }
+        }
+        while (!done && !app.quit) {
+            for (size_t i = 0; i < devices.size(); ++i) {
+                if (!devices[i])
+                    continue;
+                auto &d = *devices[i];
+                auto &chain = *app.chains[i];
+                {
+                    std::lock_guard lock(chain.mutex);
+                    if (d.generation != chain.playback_generation) {
+                        d.client->Stop();
+                        d.client->Reset();
+                        BYTE *initial{};
+                        if (SUCCEEDED(d.render->GetBuffer(d.capacity, &initial))) {
+                            std::memset(initial, 0, size_t(d.capacity) * 8);
+                            d.render->ReleaseBuffer(d.capacity, AUDCLNT_BUFFERFLAGS_SILENT);
+                        }
+                        d.client->Start();
+                        d.generation = chain.playback_generation;
+                        d.submitted = d.capacity;
+                        d.segments.clear();
+                        d.chunk.reset();
+                        d.offset = 0;
+                    }
+                }
+                if (d.volume && d.last_audio_selection != selected_audio) {
+                    d.volume->SetMasterVolume(selected_audio == int(i) ? 0.4f : 0.0f, nullptr);
+                    d.last_audio_selection = selected_audio;
+                }
+                UINT32 padding{};
+                if (FAILED(d.client->GetCurrentPadding(&padding)))
+                    continue;
+                auto available = d.capacity - padding;
+                if (padding == 0) {
+                    UINT64 raw{}, qpc{};
+                    if (SUCCEEDED(d.clock->GetPosition(&raw, &qpc)) && d.frequency) {
+                        auto current_frame = uint64_t((long double)raw * 48000 / d.frequency);
+                        if (current_frame > d.submitted) {
+                            d.submitted = current_frame;
+                            d.segments.clear();
+                        }
+                    }
+                }
+                if (available) {
+                    UINT64 write_position{}, write_qpc{};
+                    if (SUCCEEDED(d.clock->GetPosition(&write_position, &write_qpc)) && d.frequency)
+                        d.submitted = uint64_t((long double)write_position * 48000 / d.frequency) + padding;
+                    BYTE *bytes{};
+                    if (SUCCEEDED(d.render->GetBuffer(available, &bytes))) {
+                        auto *out = reinterpret_cast<float *>(bytes);
+                        std::fill(out, out + size_t(available) * 2, 0.0f);
+                        size_t written = 0;
+                        while (written < available) {
+                            if (!d.chunk) {
+                                std::lock_guard lock(chain.mutex);
+                                // Bound lateness after startup/reconnect instead of replaying an ever-growing
+                                // queue.
+                                while (chain.audio.size() > 1 &&
+                                       chain.audio.front().due_us <
+                                           now_us() + int64_t(padding + written) * 1000000 / 48000 - 15000)
+                                    chain.audio.pop_front();
+                                if (!chain.audio.empty() &&
+                                    chain.audio.front().due_us <=
+                                        now_us() + int64_t(padding + written) * 1000000 / 48000) {
+                                    d.chunk = std::move(chain.audio.front());
+                                    chain.audio.pop_front();
+                                    d.offset = 0;
+                                } else
+                                    break;
+                            }
+                            auto remaining = d.chunk->samples.size() / 2 - d.offset;
+                            size_t n = std::min<size_t>(available - written, remaining);
+                            std::copy_n(d.chunk->samples.data() + d.offset * 2, n * 2, out + written * 2);
+                            if (d.chunk->mapped)
+                                d.segments.push_back(
+                                    {d.submitted + written, d.submitted + written + n,
+                                     d.chunk->media_us + int64_t(d.offset) * 1000000 / 48000});
+                            written += n;
+                            d.offset += n;
+                            if (d.offset >= d.chunk->samples.size() / 2)
+                                d.chunk.reset();
+                        }
+                        d.render->ReleaseBuffer(available, 0);
+                        d.submitted += available;
+                    }
+                }
+                UINT64 position{}, qpc{};
+                if (SUCCEEDED(d.clock->GetPosition(&position, &qpc)) && d.frequency) {
+                    uint64_t frame = uint64_t((long double)position * 48000 / d.frequency);
+                    while (!d.segments.empty() && d.segments.front().end <= frame)
+                        d.segments.pop_front();
+                    if (!d.segments.empty() && frame >= d.segments.front().begin &&
+                        frame < d.segments.front().end) {
+                        auto &s = d.segments.front();
+                        LARGE_INTEGER counter{}, frequency{};
+                        QueryPerformanceCounter(&counter);
+                        QueryPerformanceFrequency(&frequency);
+                        auto age_us = int64_t((long double)counter.QuadPart * 1000000 / frequency.QuadPart) -
+                                      int64_t(qpc / 10);
+                        chain.audio_progress(s.media + int64_t(frame - s.begin) * 1000000 / 48000,
+                                             now_us() - std::max<int64_t>(0, age_us), position, d.frequency);
+                    }
+                }
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        }
+        devices.clear();
+        CoUninitialize();
+    }
+};
+Output::Output(Application &a) : p_(std::make_unique<Impl>(a)) {}
+Output::~Output() {
+    p_->done = true;
+    if (p_->audio_thread.joinable())
+        p_->audio_thread.join();
+}
+void Output::select_audio(int i) {
+    p_->selected_audio = i;
+}
+void Output::run(int seconds) {
+    auto &p = *p_;
+    CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    auto instance = GetModuleHandle(nullptr);
+    WNDCLASS wc{};
+    wc.lpfnWndProc = Impl::window_proc;
+    wc.hInstance = instance;
+    wc.lpszClassName = L"AVQMOutput";
+    wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    RegisterClass(&wc);
+    p.window = CreateWindowEx(0, wc.lpszClassName, L"AVQualityMonitor - software playback observation",
+                              WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, 1000, 650, nullptr, nullptr,
+                              instance, nullptr);
+    if (!p.window)
+        throw std::runtime_error("Cannot create monitor output window");
+    if (p.app.config.value("show_monitor", false)) {
+        ShowWindow(p.window, SW_SHOWNOACTIVATE);
+        ShowWindow(p.window, SW_SHOWNOACTIVATE);
+    }
+    p.images.resize(p.app.chains.size());
+    p.bitmaps.resize(p.app.chains.size());
+    if (FAILED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, p.factory.GetAddressOf())))
+        throw std::runtime_error("Direct2D factory creation failed");
+    if (FAILED(
+            CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&p.wic))))
+        throw std::runtime_error("WIC output initialization failed");
+    if (FAILED(
+            p.wic->CreateBitmap(1000, 600, GUID_WICPixelFormat32bppPBGRA, WICBitmapCacheOnLoad, &p.surface)))
+        throw std::runtime_error("Software output surface allocation failed");
+    if (FAILED(p.factory->CreateWicBitmapRenderTarget(
+            p.surface.Get(), D2D1::RenderTargetProperties(D2D1_RENDER_TARGET_TYPE_SOFTWARE),
+            p.renderer.GetAddressOf())))
+        throw std::runtime_error("Direct2D output initialization failed");
+    p.audio_thread = std::thread([&p] { p.audio_loop(); });
+    auto started = now_us();
+    while (!p.app.quit) {
+        MSG message;
+        while (PeekMessage(&message, nullptr, 0, 0, PM_REMOVE)) {
+            if (message.message == WM_QUIT)
+                p.app.quit = true;
+            TranslateMessage(&message);
+            DispatchMessage(&message);
+        }
+        if (seconds && now_us() - started > seconds * 1000000LL)
+            p.app.quit = true;
+        if (p.app.quit)
+            break;
+        bool changed = false;
+        std::vector<std::pair<size_t, VideoImage>> updates;
+        auto current = now_us();
+        for (size_t i = 0; i < p.app.chains.size(); ++i) {
+            auto &c = *p.app.chains[i];
+            std::lock_guard lock(c.mutex);
+            while (c.videos.size() > 1 && c.videos.front().due_us < current - 100000) {
+                auto id = c.videos.front().frame_id;
+                for (auto &record : c.source)
+                    if (record->id == id) {
+                        record->frame.outcome = Outcome::presentation_dropped;
+                        break;
+                    }
+                c.videos.pop_front();
+            }
+            if (!c.videos.empty() && c.videos.front().due_us <= current) {
+                auto image = std::move(c.videos.front());
+                c.videos.pop_front();
+                updates.emplace_back(i, std::move(image));
+                changed = true;
+            }
+        }
+        if (changed) {
+            p.renderer->BeginDraw();
+            p.renderer->Clear(D2D1::ColorF(D2D1::ColorF::Black));
+            for (auto &[i, image] : updates)
+                p.images[i] = std::move(image);
+            int cols = p.images.size() > 4 ? 4 : 2;
+            int rows = int((p.images.size() + cols - 1) / cols);
+            int w = 1000 / cols, h = 600 / std::max(1, rows);
+            for (size_t i = 0; i < p.images.size(); ++i) {
+                if (!p.images[i])
+                    continue;
+                auto &v = *p.images[i];
+                if (!p.bitmaps[i] || p.bitmaps[i]->GetPixelSize().width != UINT32(v.width)) {
+                    p.bitmaps[i].Reset();
+                    p.renderer->CreateBitmap(D2D1::SizeU(v.width, v.height), nullptr, 0,
+                                             D2D1::BitmapProperties(D2D1::PixelFormat(
+                                                 DXGI_FORMAT_B8G8R8A8_UNORM, D2D1_ALPHA_MODE_IGNORE)),
+                                             p.bitmaps[i].GetAddressOf());
+                }
+                if (p.bitmaps[i]) {
+                    p.bitmaps[i]->CopyFromMemory(nullptr, v.bgra.data(), v.width * 4);
+                    p.renderer->DrawBitmap(p.bitmaps[i].Get(),
+                                           D2D1::RectF(float(i % cols * w), float(i / cols * h),
+                                                       float(i % cols * w + w), float(i / cols * h + h)));
+                }
+            }
+            auto result = p.renderer->EndDraw();
+            // Locking the WIC-backed software target confirms actual rendered pixels are available.
+            ComPtr<IWICBitmapLock> pixels;
+            WICRect bounds{0, 0, 1000, 600};
+            if (SUCCEEDED(result))
+                result = p.surface->Lock(&bounds, WICBitmapLockRead, &pixels);
+            auto observed = now_us();
+            for (auto &[i, unused] : updates) {
+                auto &v = *p.images[i];
+                if (SUCCEEDED(result))
+                    p.app.chains[i]->did_present(v.frame_id, v.media_us, v.source_us, observed);
+                else
+                    p.app.chains[i]->did_drop(v.frame_id, "output_backend_failed");
+            }
+            if (pixels && !IsIconic(p.window) && IsWindowVisible(p.window)) {
+                UINT bytes{}, stride{};
+                BYTE *data{};
+                pixels->GetDataPointer(&bytes, &data);
+                pixels->GetStride(&stride);
+                BITMAPINFO info{};
+                info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+                info.bmiHeader.biWidth = int(stride / 4);
+                info.bmiHeader.biHeight = -600;
+                info.bmiHeader.biPlanes = 1;
+                info.bmiHeader.biBitCount = 32;
+                info.bmiHeader.biCompression = BI_RGB;
+                RECT rect;
+                GetClientRect(p.window, &rect);
+                auto dc = GetDC(p.window);
+                StretchDIBits(dc, 0, 0, rect.right, rect.bottom, 0, 0, 1000, 600, data, &info, DIB_RGB_COLORS,
+                              SRCCOPY);
+                ReleaseDC(p.window, dc);
+            }
+        }
+        std::this_thread::sleep_for(std::chrono::milliseconds(3));
+    }
+    p.done = true;
+    if (p.audio_thread.joinable())
+        p.audio_thread.join();
+    DestroyWindow(p.window);
+    p.bitmaps.clear();
+    p.renderer.Reset();
+    p.surface.Reset();
+    p.wic.Reset();
+    p.factory.Reset();
+    CoUninitialize();
+}
+} // namespace avqm

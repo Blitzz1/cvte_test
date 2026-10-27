@@ -1,0 +1,26 @@
+logLevel: warn
+moq: no
+logDestinations: [stdout]
+readTimeout: 10s
+writeTimeout: 10s
+rtsp: yes
+rtspAddress: 127.0.0.1:8554
+rtspTransports: [udp, tcp]
+rtpAddress: 127.0.0.1:8000
+rtcpAddress: 127.0.0.1:8001
+rtmp: yes
+rtmpAddress: 127.0.0.1:1935
+hls: yes
+hlsAddress: 127.0.0.1:8888
+hlsAlwaysRemux: yes
+hlsVariant: lowLatency
+hlsSegmentCount: 7
+hlsSegmentDuration: 1s
+hlsPartDuration: 200ms
+hlsAllowOrigins: ['http://127.0.0.1:8080']
+webrtc: no
+srt: no
+api: yes
+apiAddress: 127.0.0.1:9997
+paths:
+  all_others:

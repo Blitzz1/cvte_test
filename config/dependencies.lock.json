@@ -1,0 +1,38 @@
+﻿[
+    {
+        "name":  "mediamtx-1.21.3",
+        "url":  "https://github.com/bluenviron/mediamtx/releases/download/v1.21.3/mediamtx_v1.21.3_windows_amd64.zip",
+        "file":  "mediamtx-1.21.3.zip",
+        "sha256":  "b2f5246b07cb72961df03b8d5e8cad43dc657bcf3f49a87bb031bdf22721af74"
+    },
+    {
+        "name":  "ffmpeg-8.1-shared-snapshot",
+        "url":  "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n8.1-latest-win64-gpl-shared-8.1.zip",
+        "file":  "ffmpeg-8.1-shared.zip",
+        "sha256":  "88cda345c479dd3e18b8e33fa4835d350b1084b1f8008617a396531b05f5c851"
+    },
+    {
+        "name":  "nlohmann-json-3.12.0",
+        "url":  "https://raw.githubusercontent.com/nlohmann/json/v3.12.0/single_include/nlohmann/json.hpp",
+        "file":  "json.hpp",
+        "sha256":  "aaf127c04cb31c406e5b04a63f1ae89369fccde6d8fa7cdda1ed4f32dfc5de63"
+    },
+    {
+        "name":  "cpp-httplib-0.28.0",
+        "url":  "https://raw.githubusercontent.com/yhirose/cpp-httplib/v0.28.0/httplib.h",
+        "file":  "httplib.h",
+        "sha256":  "9e5cafaa227dad5c10e837990a736cecaff03258f50d37067cedeee1dba5d344"
+    },
+    {
+        "name":  "hls.js-1.6.13",
+        "url":  "https://cdn.jsdelivr.net/npm/hls.js@1.6.13/dist/hls.min.js",
+        "file":  "hls.min.js",
+        "sha256":  "7c47cd97d7a6e7b98d9623dd8ed9a6d45af4be4085e0c2001cd7175c2b4cfb07"
+    },
+    {
+        "name":  "sqlite-amalgamation-3500400",
+        "url":  "https://sqlite.org/2025/sqlite-amalgamation-3500400.zip",
+        "file":  "sqlite.zip",
+        "sha256":  "1d3049dd0f830a025a53105fc79fd2ab9431aea99e137809d064d8ee8356b032"
+    }
+]
