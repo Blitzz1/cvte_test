@@ -1,0 +1,10 @@
+﻿{
+    "passed":  true,
+    "chain":  "rtsp-tcp",
+    "reported_ms":  396.5340666666667,
+    "difference_ms":  0.0000000000003,
+    "raw_samples":  30,
+    "recomputed_ms":  396.53406666666672,
+    "snapshot_mono_us":  117306756957,
+    "session":  "rtsp-tcp-1793096208982"
+}

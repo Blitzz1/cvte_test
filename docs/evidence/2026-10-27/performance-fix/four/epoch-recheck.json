@@ -1,0 +1,22 @@
+﻿[
+    {
+        "wrong_epoch":  0,
+        "presented":  2109,
+        "chain":  "rtsp-udp"
+    },
+    {
+        "wrong_epoch":  0,
+        "presented":  2194,
+        "chain":  "rtsp-tcp"
+    },
+    {
+        "wrong_epoch":  0,
+        "presented":  944,
+        "chain":  "rtmp-3"
+    },
+    {
+        "wrong_epoch":  0,
+        "presented":  2130,
+        "chain":  "rtmp-4"
+    }
+]

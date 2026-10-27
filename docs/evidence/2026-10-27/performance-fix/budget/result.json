@@ -1,0 +1,9 @@
+﻿{
+    "note":  "Short regression only; review observations, not a stability acceptance.",
+    "collected":  true,
+    "binary_sha256":  "3D85D66725B0CD8C7583E5CF8C085198BC13B8AFB617FE7EF580DB3FDB0FAE89",
+    "chains":  1,
+    "scenario":  "budget",
+    "resource_guard":  false,
+    "seconds":  25.6860595
+}

@@ -1,0 +1,18 @@
+﻿{
+    "sync_samples":  28,
+    "passed":  true,
+    "chain":  "rtsp-tcp",
+    "reported_ms":  408.7786666666667,
+    "difference_ms":  0.0000000000003,
+    "sync_recomputed_ms":  -12.286,
+    "raw_samples":  30,
+    "sync_reported_ms":  -12.286,
+    "latency_passed":  true,
+    "recomputed_ms":  408.77866666666671,
+    "sync_difference_ms":  0.000,
+    "snapshot_mono_us":  120010499500,
+    "sync_passed":  true,
+    "scope":  "Raw trace consistency; not an independent physical measurement",
+    "sync_validity":  "valid",
+    "session":  "rtsp-tcp-1793098923145"
+}

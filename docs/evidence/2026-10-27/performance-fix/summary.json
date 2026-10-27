@@ -1,0 +1,12 @@
+﻿{
+    "evidence_drops_peak":  0,
+    "app_cpu_peak_pct":  3.2682068316504043,
+    "app_private_peak_mib":  127.7421875,
+    "pixel_peak_mib":  15.8203125,
+    "final_build_sha256":  "89511433E3FAFC967FDCC5549453D87020A86BC0E6A1CCE39B5D009E14784842",
+    "logical_processors":  20,
+    "pixel_budget_exceeded_snapshots":  0,
+    "scope":  "Four-chain short test, app process only; final build additionally bounds decoder identity fallback and tightens partial latency validity; final one-chain receive-loss regression passed. Not a stability acceptance.",
+    "app_cpu_mean_pct":  1.34988193650708,
+    "sample_count":  54
+}
