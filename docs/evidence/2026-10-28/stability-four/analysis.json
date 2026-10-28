@@ -1,0 +1,234 @@
+﻿{
+    "samples":  357,
+    "note":  "Descriptive evidence only. No crash or bounded memory growth does not fully prove absence of leaks; review abnormal samples and missing data.",
+    "poll_result":  {
+                        "note":  "Collection ended; inspect frame rate, metrics, reconnect epochs and memory trend before declaring pass.",
+                        "abort_reason":  "",
+                        "started":  "2026-10-28T01:59:35.1065146+00:00",
+                        "poll_failures":  0,
+                        "aborted":  false,
+                        "minutes":  60,
+                        "finished":  "2026-10-28T02:59:35.2056439+00:00"
+                    },
+    "warm_private_change_mb":  20.015625,
+    "average_app_cpu_pct":  0.5476345486111111111111111111,
+    "handles":  {
+                    "median":  627,
+                    "min":  627,
+                    "max":  630
+                },
+    "all_zero_fps_samples":  0,
+    "verdict":  "Review required. Collection completion and process survival are not acceptance; this summary does not establish absence of memory leaks.",
+    "chains":  [
+                   {
+                       "id":  "rtsp-udp",
+                       "loss_pct":  {
+                                        "median":  0.0,
+                                        "min":  0.0,
+                                        "max":  7.0
+                                    },
+                       "nonrunning_samples":  1,
+                       "av_offset_ms":  {
+                                            "median":  -9.851,
+                                            "min":  -18.215,
+                                            "max":  4.401
+                                        },
+                       "observed_average_output_fps":  29.98529775943055464324416116,
+                       "zero_fps_samples":  0,
+                       "unknown_loss_samples":  2,
+                       "valid_latency_samples":  357,
+                       "fps":  {
+                                   "median":  30.14412007754315,
+                                   "min":  28.50545879535931,
+                                   "max":  32.05486137823495
+                               },
+                       "rtp_loss_pct":  {
+                                            "median":  0.0,
+                                            "min":  0.0,
+                                            "max":  0.0
+                                        },
+                       "fps_below28_samples":  0,
+                       "source_frames_delta":  107988,
+                       "presented_frames_delta":  107935,
+                       "confirmed_loss_pct":  {
+                                                  "median":  0.0,
+                                                  "min":  0.0,
+                                                  "max":  7.0
+                                              },
+                       "valid_sync_samples":  357,
+                       "latency_ms":  {
+                                          "median":  393.5019333333333,
+                                          "min":  387.1836666666667,
+                                          "max":  411.57741935483864
+                                      },
+                       "drift_ms_per_s":  {
+                                              "median":  0.0009706345621457414,
+                                              "min":  -0.11372490976797937,
+                                              "max":  0.10421652616914968
+                                          },
+                       "samples":  357,
+                       "connections":  [
+                                           1
+                                       ]
+                   },
+                   {
+                       "id":  "rtsp-tcp",
+                       "loss_pct":  {
+                                        "median":  0.0,
+                                        "min":  0.0,
+                                        "max":  7.023411371237458
+                                    },
+                       "nonrunning_samples":  0,
+                       "av_offset_ms":  {
+                                            "median":  -9.145,
+                                            "min":  -16.059,
+                                            "max":  -2.444
+                                        },
+                       "observed_average_output_fps":  29.994187642492599186243038384,
+                       "zero_fps_samples":  0,
+                       "unknown_loss_samples":  0,
+                       "valid_latency_samples":  357,
+                       "fps":  {
+                                   "median":  30.077776982618158,
+                                   "min":  28.81111944575638,
+                                   "max":  31.388209373531843
+                               },
+                       "rtp_loss_pct":  null,
+                       "fps_below28_samples":  0,
+                       "source_frames_delta":  107989,
+                       "presented_frames_delta":  107967,
+                       "confirmed_loss_pct":  {
+                                                  "median":  0.0,
+                                                  "min":  0.0,
+                                                  "max":  7.023411371237458
+                                              },
+                       "valid_sync_samples":  357,
+                       "latency_ms":  {
+                                          "median":  394.7726333333334,
+                                          "min":  389.78256666666675,
+                                          "max":  401.32525806451616
+                                      },
+                       "drift_ms_per_s":  {
+                                              "median":  0.003654115320563474,
+                                              "min":  -0.1139502646305472,
+                                              "max":  0.12574858221309815
+                                          },
+                       "samples":  357,
+                       "connections":  [
+                                           1
+                                       ]
+                   },
+                   {
+                       "id":  "rtmp-3",
+                       "loss_pct":  {
+                                        "median":  0.0,
+                                        "min":  0.0,
+                                        "max":  7.0
+                                    },
+                       "nonrunning_samples":  0,
+                       "av_offset_ms":  {
+                                            "median":  -12.715,
+                                            "min":  -17.584,
+                                            "max":  -7.333
+                                        },
+                       "observed_average_output_fps":  29.994187642492599186243038384,
+                       "zero_fps_samples":  1,
+                       "unknown_loss_samples":  0,
+                       "valid_latency_samples":  357,
+                       "fps":  {
+                                   "median":  30.065723671946877,
+                                   "min":  0.0,
+                                   "max":  31.022398171479807
+                               },
+                       "rtp_loss_pct":  null,
+                       "fps_below28_samples":  1,
+                       "source_frames_delta":  107988,
+                       "presented_frames_delta":  107967,
+                       "confirmed_loss_pct":  {
+                                                  "median":  0.0,
+                                                  "min":  0.0,
+                                                  "max":  7.0
+                                              },
+                       "valid_sync_samples":  356,
+                       "latency_ms":  {
+                                          "median":  374.4497666666666,
+                                          "min":  369.66126666666673,
+                                          "max":  381.9125666666667
+                                      },
+                       "drift_ms_per_s":  {
+                                              "median":  0.0009182698894315977,
+                                              "min":  -0.08098447724554148,
+                                              "max":  0.046908606661267026
+                                          },
+                       "samples":  357,
+                       "connections":  [
+                                           1
+                                       ]
+                   },
+                   {
+                       "id":  "rtmp-4",
+                       "loss_pct":  {
+                                        "median":  0.0,
+                                        "min":  0.0,
+                                        "max":  6.666666666666667
+                                    },
+                       "nonrunning_samples":  1,
+                       "av_offset_ms":  {
+                                            "median":  -12.452,
+                                            "min":  -19.812,
+                                            "max":  -6.502
+                                        },
+                       "observed_average_output_fps":  29.990853936344332482618459425,
+                       "zero_fps_samples":  1,
+                       "unknown_loss_samples":  0,
+                       "valid_latency_samples":  356,
+                       "fps":  {
+                                   "median":  30.074132737197193,
+                                   "min":  0.0,
+                                   "max":  31.239847049708846
+                               },
+                       "rtp_loss_pct":  null,
+                       "fps_below28_samples":  1,
+                       "source_frames_delta":  107988,
+                       "presented_frames_delta":  107955,
+                       "confirmed_loss_pct":  {
+                                                  "median":  0.0,
+                                                  "min":  0.0,
+                                                  "max":  6.666666666666667
+                                              },
+                       "valid_sync_samples":  356,
+                       "latency_ms":  {
+                                          "median":  380.21406666666655,
+                                          "min":  375.4748333333333,
+                                          "max":  385.35193333333336
+                                      },
+                       "drift_ms_per_s":  {
+                                              "median":  0.001844469022230835,
+                                              "min":  -0.08333260935667307,
+                                              "max":  0.08157476226333409
+                                          },
+                       "samples":  357,
+                       "connections":  [
+                                           1
+                                       ]
+                   }
+               ],
+    "any_fps_below20_samples":  1,
+    "private_memory_mb":  {
+                              "median":  154.25,
+                              "min":  139.38671875,
+                              "max":  159.546875
+                          },
+    "any_latency_above1000_samples":  0,
+    "collection_complete":  true,
+    "fault_active_samples":  0,
+    "hour_observed":  false,
+    "average_server_cpu_pct":  0.3878472222222222222222222222,
+    "elapsed_seconds":  3599.5974048999997,
+    "directory":  "artifacts/stability-20261028-095933",
+    "sampling_gaps_s":  {
+                            "median":  10.063,
+                            "min":  9.807,
+                            "max":  13.115
+                        }
+}

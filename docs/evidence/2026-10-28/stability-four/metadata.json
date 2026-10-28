@@ -1,0 +1,69 @@
+﻿{
+    "app_private_limit_mib":  512,
+    "combined_cpu_limit_pct":  20,
+    "interval_seconds":  10,
+    "cpu_consecutive_intervals":  2,
+    "server_private_limit_mib":  256,
+    "expected_minutes":  60,
+    "binary_sha256":  "5193082254535C2BFECB642C04970A6ADDE204E131694BE5ED9D040E0150294F",
+    "configuration":  {
+                          "chains":  [
+                                         {
+                                             "alias":  "RTSP UDP · 链路1",
+                                             "enabled":  true,
+                                             "id":  "rtsp-udp",
+                                             "protocol":  "rtsp",
+                                             "publish_url":  "rtsp://127.0.0.1:8554/chain1",
+                                             "pull_url":  "rtsp://127.0.0.1:8555/chain1",
+                                             "source":  "data/media/sample-3m.mp4",
+                                             "transport":  "udp"
+                                         },
+                                         {
+                                             "alias":  "RTSP TCP · 链路2",
+                                             "enabled":  true,
+                                             "id":  "rtsp-tcp",
+                                             "protocol":  "rtsp",
+                                             "publish_url":  "rtsp://127.0.0.1:8554/chain2",
+                                             "source":  "data/media/sample-3m.mp4",
+                                             "transport":  "tcp"
+                                         },
+                                         {
+                                             "alias":  "RTMP · 链路3",
+                                             "enabled":  true,
+                                             "id":  "rtmp-3",
+                                             "protocol":  "rtmp",
+                                             "publish_url":  "rtmp://127.0.0.1:1935/chain3",
+                                             "source":  "data/media/sample-3m.mp4"
+                                         },
+                                         {
+                                             "alias":  "RTMP · 链路4",
+                                             "enabled":  true,
+                                             "id":  "rtmp-4",
+                                             "protocol":  "rtmp",
+                                             "publish_url":  "rtmp://127.0.0.1:1935/chain4",
+                                             "source":  "data/media/sample-3m.mp4"
+                                         }
+                                     ],
+                          "port":  8080,
+                          "revision":  3,
+                          "settings":  {
+                                           "decoder_threads":  1,
+                                           "delay_critical_ms":  1000,
+                                           "delay_warning_ms":  400,
+                                           "hold_ms":  3000,
+                                           "loss_critical_pct":  5,
+                                           "loss_warning_pct":  1,
+                                           "output_height":  180,
+                                           "output_width":  320,
+                                           "recovery_ms":  3000,
+                                           "resolution_timeout_ms":  5000,
+                                           "retention_days":  7,
+                                           "video_queue_frames":  96,
+                                           "video_queue_mib":  20,
+                                           "video_total_mib":  64,
+                                           "webhook":  "http://127.0.0.1:8080/webhook-demo"
+                                       },
+                          "show_monitor":  false
+                      },
+    "git_revision":  "3a594356699197d27886ef23e40a7856d105a736"
+}

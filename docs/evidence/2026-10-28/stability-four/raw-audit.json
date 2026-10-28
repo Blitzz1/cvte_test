@@ -1,0 +1,937 @@
+{
+  "raw_unknown_windows": [
+    {
+      "id": "rtsp-udp",
+      "unknown_snapshot_count": 2,
+      "candidate_source_units": 600,
+      "unique_unresolved_units": 26,
+      "source_loop_count": 12,
+      "units": [
+        {
+          "id": 46205,
+          "source_us": 174450371410,
+          "media_us": 601000000,
+          "received_us": null,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1014.953,
+          "evidence": "no_receiver_match_record"
+        },
+        {
+          "id": 46208,
+          "source_us": 174450403501,
+          "media_us": 601033333,
+          "received_us": 174450546831,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1047.044,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 46210,
+          "source_us": 174450434438,
+          "media_us": 601066667,
+          "received_us": 174450549028,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1077.981,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 46213,
+          "source_us": 174450465098,
+          "media_us": 601100000,
+          "received_us": 174450550456,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1108.641,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 46216,
+          "source_us": 174450497291,
+          "media_us": 601133333,
+          "received_us": 174450551824,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1140.834,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 46218,
+          "source_us": 174450543208,
+          "media_us": 601166667,
+          "received_us": 174450593080,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1186.751,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 46221,
+          "source_us": 174450575748,
+          "media_us": 601200000,
+          "received_us": 174450608607,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1219.291,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 46223,
+          "source_us": 174450606740,
+          "media_us": 601233333,
+          "received_us": 174450653938,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1250.283,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 46226,
+          "source_us": 174450637201,
+          "media_us": 601266667,
+          "received_us": 174450671443,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1280.744,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 46228,
+          "source_us": 174450669077,
+          "media_us": 601300000,
+          "received_us": 174450716394,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1312.62,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 46231,
+          "source_us": 174450699189,
+          "media_us": 601333333,
+          "received_us": 174450763169,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1342.732,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 46234,
+          "source_us": 174450730398,
+          "media_us": 601366667,
+          "received_us": 174450778376,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1373.941,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 46236,
+          "source_us": 174450775802,
+          "media_us": 601400000,
+          "received_us": 174450828774,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1419.345,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69268,
+          "source_us": 174750370706,
+          "media_us": 901000000,
+          "received_us": null,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1009.285,
+          "evidence": "no_receiver_match_record"
+        },
+        {
+          "id": 69271,
+          "source_us": 174750405698,
+          "media_us": 901033333,
+          "received_us": 174750543001,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1044.277,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69273,
+          "source_us": 174750437625,
+          "media_us": 901066667,
+          "received_us": 174750545003,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1076.204,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69276,
+          "source_us": 174750472846,
+          "media_us": 901100000,
+          "received_us": 174750546796,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1111.425,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69279,
+          "source_us": 174750500158,
+          "media_us": 901133333,
+          "received_us": 174750548516,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1138.737,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69281,
+          "source_us": 174750530994,
+          "media_us": 901166667,
+          "received_us": 174750587195,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1169.573,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69284,
+          "source_us": 174750570216,
+          "media_us": 901200000,
+          "received_us": 174750618159,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1208.795,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69286,
+          "source_us": 174750599773,
+          "media_us": 901233333,
+          "received_us": 174750653133,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1238.352,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69289,
+          "source_us": 174750632841,
+          "media_us": 901266667,
+          "received_us": 174750668924,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1271.42,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69291,
+          "source_us": 174750666281,
+          "media_us": 901300000,
+          "received_us": 174750711733,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1304.86,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69294,
+          "source_us": 174750709713,
+          "media_us": 901333333,
+          "received_us": 174750765406,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1348.292,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69297,
+          "source_us": 174750732287,
+          "media_us": 901366667,
+          "received_us": 174750773776,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1370.866,
+          "evidence": "matched_at_receiver_without_observed_output"
+        },
+        {
+          "id": 69299,
+          "source_us": 174750763810,
+          "media_us": 901400000,
+          "received_us": 174750817401,
+          "presented_us": null,
+          "presentation_count": 0,
+          "explicit_drop": null,
+          "nearest_source_loop_delta_ms": 1402.389,
+          "evidence": "matched_at_receiver_without_observed_output"
+        }
+      ],
+      "unmapped_output_count": 0,
+      "unmapped_outputs": [],
+      "duplicate_presented_ids": []
+    },
+    {
+      "id": "rtsp-tcp",
+      "unknown_snapshot_count": 0,
+      "candidate_source_units": 0,
+      "unique_unresolved_units": 0,
+      "source_loop_count": 12,
+      "units": [],
+      "unmapped_output_count": 0,
+      "unmapped_outputs": [],
+      "duplicate_presented_ids": []
+    },
+    {
+      "id": "rtmp-3",
+      "unknown_snapshot_count": 0,
+      "candidate_source_units": 0,
+      "unique_unresolved_units": 0,
+      "source_loop_count": 12,
+      "units": [],
+      "unmapped_output_count": 0,
+      "unmapped_outputs": [],
+      "duplicate_presented_ids": []
+    },
+    {
+      "id": "rtmp-4",
+      "unknown_snapshot_count": 0,
+      "candidate_source_units": 0,
+      "unique_unresolved_units": 0,
+      "source_loop_count": 12,
+      "units": [],
+      "unmapped_output_count": 0,
+      "unmapped_outputs": [],
+      "duplicate_presented_ids": []
+    }
+  ],
+  "presentation_drop_reviews": [
+    {
+      "id": "rtsp-udp",
+      "event_count": 27,
+      "unique_ids": 27,
+      "reasons": {
+        "output_deadline_missed": 27
+      },
+      "events": [
+        {
+          "id": 93720,
+          "mono_us": 175069597724,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93723,
+          "mono_us": 175069597745,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93725,
+          "mono_us": 175069597765,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93728,
+          "mono_us": 175069597772,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93730,
+          "mono_us": 175069597779,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93733,
+          "mono_us": 175069597786,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93736,
+          "mono_us": 175069597850,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93738,
+          "mono_us": 175069597908,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93741,
+          "mono_us": 175069597958,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93743,
+          "mono_us": 175069597984,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93746,
+          "mono_us": 175069597997,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93748,
+          "mono_us": 175069598008,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93751,
+          "mono_us": 175069598019,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93754,
+          "mono_us": 175069598030,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93756,
+          "mono_us": 175069598040,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93759,
+          "mono_us": 175069598050,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93761,
+          "mono_us": 175069598084,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93764,
+          "mono_us": 175069598109,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93766,
+          "mono_us": 175069598121,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93769,
+          "mono_us": 175069598132,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93771,
+          "mono_us": 175069598142,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 123474,
+          "mono_us": 175455954560,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 149658,
+          "mono_us": 175796571675,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 153243,
+          "mono_us": 175843184878,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 164554,
+          "mono_us": 175990322011,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 217989,
+          "mono_us": 176685392088,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 223026,
+          "mono_us": 176750918311,
+          "reason": "output_deadline_missed"
+        }
+      ],
+      "decoder_error_events": [],
+      "raw_json_records": 890917,
+      "raw_json_parse_errors": 0
+    },
+    {
+      "id": "rtsp-tcp",
+      "event_count": 21,
+      "unique_ids": 21,
+      "reasons": {
+        "output_deadline_missed": 21
+      },
+      "events": [
+        {
+          "id": 93777,
+          "mono_us": 175069598154,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93779,
+          "mono_us": 175069598168,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93782,
+          "mono_us": 175069598178,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93784,
+          "mono_us": 175069598189,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93787,
+          "mono_us": 175069598200,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93789,
+          "mono_us": 175069598212,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93792,
+          "mono_us": 175069598223,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93795,
+          "mono_us": 175069598233,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93797,
+          "mono_us": 175069598244,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93800,
+          "mono_us": 175069598253,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93802,
+          "mono_us": 175069598265,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93805,
+          "mono_us": 175069598299,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93807,
+          "mono_us": 175069599402,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93810,
+          "mono_us": 175069599423,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93812,
+          "mono_us": 175069599434,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93815,
+          "mono_us": 175069599442,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93818,
+          "mono_us": 175069599450,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93820,
+          "mono_us": 175069599455,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93823,
+          "mono_us": 175069599462,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93825,
+          "mono_us": 175069599468,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93828,
+          "mono_us": 175069599474,
+          "reason": "output_deadline_missed"
+        }
+      ],
+      "decoder_error_events": [],
+      "raw_json_records": 782837,
+      "raw_json_parse_errors": 0
+    },
+    {
+      "id": "rtmp-3",
+      "event_count": 21,
+      "unique_ids": 21,
+      "reasons": {
+        "output_deadline_missed": 21
+      },
+      "events": [
+        {
+          "id": 93779,
+          "mono_us": 175069599487,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93782,
+          "mono_us": 175069599496,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93784,
+          "mono_us": 175069599504,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93787,
+          "mono_us": 175069599509,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93789,
+          "mono_us": 175069599528,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93792,
+          "mono_us": 175069599534,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93795,
+          "mono_us": 175069599547,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93797,
+          "mono_us": 175069599556,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93800,
+          "mono_us": 175069599561,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93802,
+          "mono_us": 175069599566,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93805,
+          "mono_us": 175069599571,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93807,
+          "mono_us": 175069599579,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93810,
+          "mono_us": 175069599584,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93812,
+          "mono_us": 175069599591,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93815,
+          "mono_us": 175069599598,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93818,
+          "mono_us": 175069599604,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93820,
+          "mono_us": 175069599611,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93823,
+          "mono_us": 175069599616,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93825,
+          "mono_us": 175069599631,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93828,
+          "mono_us": 175069599637,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93830,
+          "mono_us": 175069599645,
+          "reason": "output_deadline_missed"
+        }
+      ],
+      "decoder_error_events": [],
+      "raw_json_records": 782552,
+      "raw_json_parse_errors": 0
+    },
+    {
+      "id": "rtmp-4",
+      "event_count": 20,
+      "unique_ids": 20,
+      "reasons": {
+        "output_deadline_missed": 20
+      },
+      "events": [
+        {
+          "id": 93743,
+          "mono_us": 175069599652,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93746,
+          "mono_us": 175069599658,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93748,
+          "mono_us": 175069599665,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93751,
+          "mono_us": 175069599673,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93754,
+          "mono_us": 175069600199,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93756,
+          "mono_us": 175069600211,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93759,
+          "mono_us": 175069600217,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93761,
+          "mono_us": 175069600222,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93764,
+          "mono_us": 175069600227,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93766,
+          "mono_us": 175069600233,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93769,
+          "mono_us": 175069600240,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93771,
+          "mono_us": 175069600245,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93774,
+          "mono_us": 175069600251,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93777,
+          "mono_us": 175069600259,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93779,
+          "mono_us": 175069600271,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93782,
+          "mono_us": 175069600302,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93784,
+          "mono_us": 175069600330,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93787,
+          "mono_us": 175069600341,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93789,
+          "mono_us": 175069600348,
+          "reason": "output_deadline_missed"
+        },
+        {
+          "id": 93792,
+          "mono_us": 175069600377,
+          "reason": "output_deadline_missed"
+        }
+      ],
+      "decoder_error_events": [],
+      "raw_json_records": 782444,
+      "raw_json_parse_errors": 0
+    }
+  ],
+  "persisted_one_second_metrics": {
+    "rtsp-udp": {
+      "samples": 3543,
+      "zero_fps": 0,
+      "fps_below28": 3,
+      "min_fps": 6.107280489071021,
+      "invalid_latency": 0,
+      "invalid_sync": 2
+    },
+    "rtsp-tcp": {
+      "samples": 3543,
+      "zero_fps": 0,
+      "fps_below28": 1,
+      "min_fps": 7.026080811974047,
+      "invalid_latency": 0,
+      "invalid_sync": 4
+    },
+    "rtmp-3": {
+      "samples": 3543,
+      "zero_fps": 0,
+      "fps_below28": 1,
+      "min_fps": 7.026080811974047,
+      "invalid_latency": 0,
+      "invalid_sync": 1
+    },
+    "rtmp-4": {
+      "samples": 3543,
+      "zero_fps": 0,
+      "fps_below28": 1,
+      "min_fps": 7.268898356917447,
+      "invalid_latency": 0,
+      "invalid_sync": 1
+    }
+  },
+  "freeze_events": [
+    {
+      "id": "rtsp-udp",
+      "time_ms": 1793153375539,
+      "payload": {
+        "end_mono_us": 174451197145,
+        "excess_ms": 282.8955666666667,
+        "interval_ms": 465.937,
+        "start_mono_us": 174450731208,
+        "threshold_ms": 183.04143333333332
+      }
+    },
+    {
+      "id": "rtsp-udp",
+      "time_ms": 1793153674786,
+      "payload": {
+        "end_mono_us": 174751199557,
+        "excess_ms": 267.19783333333334,
+        "interval_ms": 451.01,
+        "start_mono_us": 174750748547,
+        "threshold_ms": 183.81216666666666
+      }
+    },
+    {
+      "id": "rtsp-udp",
+      "time_ms": 1793153993119,
+      "payload": {
+        "end_mono_us": 175069601407,
+        "excess_ms": 631.2414333333334,
+        "interval_ms": 813.593,
+        "start_mono_us": 175068787814,
+        "threshold_ms": 182.35156666666666
+      }
+    },
+    {
+      "id": "rtsp-tcp",
+      "time_ms": 1793153993119,
+      "payload": {
+        "end_mono_us": 175069601407,
+        "excess_ms": 614.2745666666667,
+        "interval_ms": 797.45,
+        "start_mono_us": 175068803957,
+        "threshold_ms": 183.17543333333333
+      }
+    },
+    {
+      "id": "rtmp-3",
+      "time_ms": 1793153993120,
+      "payload": {
+        "end_mono_us": 175069601407,
+        "excess_ms": 614.2745666666667,
+        "interval_ms": 797.45,
+        "start_mono_us": 175068803957,
+        "threshold_ms": 183.17543333333333
+      }
+    },
+    {
+      "id": "rtmp-4",
+      "time_ms": 1793153993120,
+      "payload": {
+        "end_mono_us": 175069601407,
+        "excess_ms": 614.2745666666667,
+        "interval_ms": 797.45,
+        "start_mono_us": 175068803957,
+        "threshold_ms": 183.17543333333333
+      }
+    }
+  ],
+  "note": "No receiver match does not prove network packet loss; shared decoder and identity limitations remain. Raw decoding-completion events are not recorded per frame."
+}

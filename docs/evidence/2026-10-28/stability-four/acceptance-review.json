@@ -1,0 +1,100 @@
+﻿{
+    "api_observation_span_s":  3599.5974048999997,
+    "startup_excluded_seconds":  30,
+    "steady_slope_mib_per_min":  0.3176957751051494628486669086,
+    "raw_source_hour_covered":  true,
+    "steady_first5_median_mib":  141.03125,
+    "verdict":  "review_required",
+    "steady_median_growth_mib":  18.05078125,
+    "chains":  [
+                   {
+                       "id":  "rtsp-udp",
+                       "valid_sync_pct":  100,
+                       "fps_ge28_pct":  100,
+                       "raw_source_span_s":  3607.620677,
+                       "generations":  [
+                                           2
+                                       ],
+                       "average_output_fps":  29.985225438985216455213712748,
+                       "samples":  354,
+                       "evidence_records_dropped":  0,
+                       "raw_presentation_span_s":  3606.166363,
+                       "sessions":  [
+                                        "rtsp-udp-1793152771956"
+                                    ],
+                       "valid_latency_pct":  100,
+                       "last_uptime_s":  3603.158513,
+                       "unknown_loss_samples":  2,
+                       "confirmed_loss_samples":  7
+                   },
+                   {
+                       "id":  "rtsp-tcp",
+                       "valid_sync_pct":  100,
+                       "fps_ge28_pct":  100,
+                       "raw_source_span_s":  3608.432067,
+                       "generations":  [
+                                           2
+                                       ],
+                       "average_output_fps":  29.994198517838037138313258625,
+                       "samples":  354,
+                       "evidence_records_dropped":  0,
+                       "raw_presentation_span_s":  3606.895139,
+                       "sessions":  [
+                                        "rtsp-tcp-1793152771961"
+                                    ],
+                       "valid_latency_pct":  100,
+                       "last_uptime_s":  3603.1536,
+                       "unknown_loss_samples":  0,
+                       "confirmed_loss_samples":  1
+                   },
+                   {
+                       "id":  "rtmp-3",
+                       "valid_sync_pct":  100,
+                       "fps_ge28_pct":  100,
+                       "raw_source_span_s":  3608.458113,
+                       "generations":  [
+                                           4
+                                       ],
+                       "average_output_fps":  29.994198517838037138313258625,
+                       "samples":  354,
+                       "evidence_records_dropped":  0,
+                       "raw_presentation_span_s":  3604.93811,
+                       "sessions":  [
+                                        "rtmp-3-1793152771961"
+                                    ],
+                       "valid_latency_pct":  100,
+                       "last_uptime_s":  3603.153563,
+                       "unknown_loss_samples":  0,
+                       "confirmed_loss_samples":  1
+                   },
+                   {
+                       "id":  "rtmp-4",
+                       "valid_sync_pct":  100,
+                       "fps_ge28_pct":  100,
+                       "raw_source_span_s":  3607.995561,
+                       "generations":  [
+                                           4
+                                       ],
+                       "average_output_fps":  29.994478926552187784660119434,
+                       "samples":  354,
+                       "evidence_records_dropped":  0,
+                       "raw_presentation_span_s":  3604.445295,
+                       "sessions":  [
+                                        "rtmp-4-1793152771962"
+                                    ],
+                       "valid_latency_pct":  100,
+                       "last_uptime_s":  3603.15297,
+                       "unknown_loss_samples":  0,
+                       "confirmed_loss_samples":  1
+                   }
+               ],
+    "note":  "Uses predeclared engineering criteria. Review events, cleanup and raw facts before final acceptance; no proof of universal absence of leaks.",
+    "steady_last5_median_mib":  159.08203125,
+    "issues":  [
+                   "rtsp-udp: loss_or_evidence_requires_review",
+                   "rtsp-tcp: loss_or_evidence_requires_review",
+                   "rtmp-3: loss_or_evidence_requires_review",
+                   "rtmp-4: loss_or_evidence_requires_review"
+               ],
+    "collection_seconds":  3600.0991292999997
+}

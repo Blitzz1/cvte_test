@@ -1,0 +1,50 @@
+﻿{
+    "binary_sha256":  "5193082254535C2BFECB642C04970A6ADDE204E131694BE5ED9D040E0150294F",
+    "unresolved_udp_received_matched":  24,
+    "unresolved_udp_without_receiver_match":  2,
+    "manual_review_required_by_automatic_check":  true,
+    "persisted_metric_checks":  [
+                                    {
+                                        "id":  "rtsp-udp",
+                                        "valid_sync_pct":  99.943550663279709,
+                                        "fps_ge28_pct":  99.915325994919556,
+                                        "zero_fps":  0,
+                                        "valid_latency_pct":  100,
+                                        "persisted_samples":  3543
+                                    },
+                                    {
+                                        "id":  "rtsp-tcp",
+                                        "valid_sync_pct":  99.887101326559417,
+                                        "fps_ge28_pct":  99.971775331639847,
+                                        "zero_fps":  0,
+                                        "valid_latency_pct":  100,
+                                        "persisted_samples":  3543
+                                    },
+                                    {
+                                        "id":  "rtmp-3",
+                                        "valid_sync_pct":  99.971775331639847,
+                                        "fps_ge28_pct":  99.971775331639847,
+                                        "zero_fps":  0,
+                                        "valid_latency_pct":  100,
+                                        "persisted_samples":  3543
+                                    },
+                                    {
+                                        "id":  "rtmp-4",
+                                        "valid_sync_pct":  99.971775331639847,
+                                        "fps_ge28_pct":  99.971775331639847,
+                                        "zero_fps":  0,
+                                        "valid_latency_pct":  100,
+                                        "persisted_samples":  3543
+                                    }
+                                ],
+    "freeze_time_groups":  3,
+    "final_user_signoff":  "pending",
+    "freeze_records":  6,
+    "status":  "runtime_and_resource_criteria_met_with_documented_quality_anomalies",
+    "quality_events_reviewed":  true,
+    "root_cause_limit":  "No per-frame decode-completion or system scheduling trace; no inference that all missing frames were network loss",
+    "presentation_drop_unique_frames":  89,
+    "unresolved_udp_frames":  26,
+    "physical_network_disconnection":  "not_performed",
+    "native_edge_chrome":  "not_verified"
+}
