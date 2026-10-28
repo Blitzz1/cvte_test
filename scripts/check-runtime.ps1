@@ -3,7 +3,7 @@ $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot
 Set-Location $root
 $checks=@()
-foreach($path in 'runtime/avqm.exe','third_party/mediamtx/mediamtx.exe','web/index.html','web/app.js','web/style.css','web/vendor/hls.min.js'){
+foreach($path in 'runtime/avqm.exe','third_party/mediamtx/mediamtx.exe','web/index.html','web/app.js','web/diagnostics.js','web/style.css','web/vendor/hls.min.js'){
     $checks+=@{path=$path;exists=(Test-Path -LiteralPath $path -PathType Leaf)}
 }
 $dlls=@()
