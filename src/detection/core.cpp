@@ -34,13 +34,33 @@ std::optional<double> observed_sync_offset(const AudioClockSample &a, uint64_t g
         return {};
     return sync_offset_ms(a.media_us + observed - a.observed_us, video);
 }
-bool append_sync_segment(std::vector<SyncSample> &values, SyncSample value) {
+bool append_sync_segment(std::vector<SyncSample> &values, SyncSample value, SyncStepState &step) {
     bool reset = false;
     if (!values.empty() &&
-        (value.seconds <= values.back().seconds || value.seconds - values.back().seconds > 0.5 ||
-         std::abs(value.offset_ms - values.back().offset_ms) > 50)) {
+        (value.seconds <= values.back().seconds || value.seconds - values.back().seconds > 0.5)) {
         values.clear();
+        step = {};
         reset = true;
+    }
+    if (!values.empty()) {
+        const auto baseline = step.pending ? step.baseline : values.back().offset_ms;
+        const auto delta = value.offset_ms - baseline;
+        if (std::abs(delta) <= 50) {
+            step = {};
+        } else {
+            const int direction = delta > 0 ? 1 : -1;
+            if (!step.pending || step.direction != direction)
+                step = {true, baseline, value.seconds, direction, 1};
+            else
+                ++step.count;
+            if (step.count >= 3 && value.seconds - step.started >= 0.1) {
+                values.clear();
+                step = {};
+                reset = true;
+            }
+        }
+    } else {
+        step = {};
     }
     values.push_back(value);
     auto first = std::lower_bound(values.begin(), values.end(), value.seconds - 60,

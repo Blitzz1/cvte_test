@@ -170,6 +170,7 @@ void Chain::reset_playback_locked(const std::string &reason) {
     audio_pts_offset_.reset();
     last_video_match_us_ = 0;
     sync_samples.clear();
+    sync_step = {};
     latency_samples.clear();
     presentation_times.clear();
     freeze.reset();
@@ -209,6 +210,7 @@ void Chain::start() {
         ++sync_segment;
         audio.clear();
         sync_samples.clear();
+        sync_step = {};
         unmapped_outputs.clear();
         last_video_source_valid = false;
         last_video_drop_us = 0;
@@ -923,6 +925,7 @@ void Chain::did_present(uint64_t id, int64_t media, int64_t source_time, int64_t
     ++presented;
     if (last_present_us && observed - last_present_us > 500000) {
         sync_samples.clear();
+        sync_step = {};
         ++sync_segment;
     }
     if (state == "running" && last_present_us && observed - last_present_us >= freeze.threshold_ms() * 1000) {
@@ -944,7 +947,8 @@ void Chain::did_present(uint64_t id, int64_t media, int64_t source_time, int64_t
     if (source_time && audio_sample) {
         av_offset_ms = observed_sync_offset(*audio_sample, generation, media, observed);
         if (av_offset_ms &&
-            append_sync_segment(sync_samples, {(observed - started_us) / 1000000.0, *av_offset_ms}))
+            append_sync_segment(sync_samples, {(observed - started_us) / 1000000.0, *av_offset_ms},
+                                sync_step))
             ++sync_segment;
     }
     presentation_times.push_back(observed);
@@ -1194,11 +1198,13 @@ Json Chain::snapshot() {
     bool fit_fresh = !sync_samples.empty() &&
                      (now - started_us) / 1000000.0 - sync_samples.back().seconds <= 0.5 &&
                      sync_median.has_value();
-    j["drift_ms_per_s"] = (fit_fresh && fit && fit->residual_ms <= 15 && sync_samples.size() > 40 &&
-                           sync_samples.back().seconds - sync_samples.front().seconds > 48)
-                              ? Json(fit->slope_ms_per_s)
-                              : Json(nullptr);
-    j["drift_validity"] = !fit_fresh ? "stale_or_unmapped"
+    j["drift_ms_per_s"] =
+        (!sync_step.pending && fit_fresh && fit && fit->residual_ms <= 15 && sync_samples.size() > 40 &&
+         sync_samples.back().seconds - sync_samples.front().seconds > 48)
+            ? Json(fit->slope_ms_per_s)
+            : Json(nullptr);
+    j["drift_validity"] = sync_step.pending ? "step_confirmation_pending"
+                          : !fit_fresh      ? "stale_or_unmapped"
                           : !fit || sync_samples.back().seconds - sync_samples.front().seconds <= 48
                               ? "insufficient_continuous_span"
                           : fit->residual_ms > 15 ? "nonlinear_or_unstable"

@@ -45,13 +45,21 @@ int main() {
         check(!observed_sync_offset(clock, 7, 10000000, 1010000),
               "no extrapolation beyond mapped PCM segment");
         std::vector<SyncSample> segments;
+        SyncStepState step;
         for (int i = 0; i < 1800; i++)
-            append_sync_segment(segments, {i / 30.0, i / 30.0 * 5});
+            append_sync_segment(segments, {i / 30.0, i / 30.0 * 5}, step);
         check(segments.size() == 1800 && std::abs(fit_drift(segments)->slope_ms_per_s - 5) < 1e-9,
               "gradual drift retains fit segment");
-        check(append_sync_segment(segments, {60, 650}) && segments.size() == 1,
-              "fixed AV jump is not progressive drift");
-        check(append_sync_segment(segments, {62, 650}) && segments.size() == 1,
+        check(!append_sync_segment(segments, {60, 352}, step) && step.pending,
+              "isolated real output jitter is retained for verification");
+        check(!append_sync_segment(segments, {60.04, 300.2}, step) && !step.pending && segments.size() > 1,
+              "one delayed video frame does not erase continuous drift evidence");
+        check(!append_sync_segment(segments, {60.08, 650}, step) && step.pending,
+              "fixed step waits for sustained evidence");
+        append_sync_segment(segments, {60.14, 650}, step);
+        check(append_sync_segment(segments, {60.20, 650}, step) && segments.size() == 1 && !step.pending,
+              "confirmed fixed AV jump is not progressive drift");
+        check(append_sync_segment(segments, {62, 650}, step) && segments.size() == 1,
               "clock gap resets trend evidence");
         auto dir = std::filesystem::current_path() / "observation-tests" /
                    std::to_string(std::chrono::steady_clock::now().time_since_epoch().count());

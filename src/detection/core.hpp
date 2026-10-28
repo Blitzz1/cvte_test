@@ -73,8 +73,14 @@ struct AudioClockSample {
 std::optional<double> observed_sync_offset(const AudioClockSample &audio, uint64_t generation,
                                            Microseconds video_media, Microseconds observed,
                                            Microseconds freshness = 15000);
-// Returns true when a gap, reverse time or measured step begins a new fit segment.
-bool append_sync_segment(std::vector<SyncSample> &samples, SyncSample value);
+struct SyncStepState {
+    bool pending{};
+    double baseline{}, started{};
+    int direction{};
+    size_t count{};
+};
+// Keep transient raw jitter; only a persistent step, gap or reverse time cuts the fit.
+bool append_sync_segment(std::vector<SyncSample> &samples, SyncSample value, SyncStepState &step);
 
 enum class Outcome {
     pending,

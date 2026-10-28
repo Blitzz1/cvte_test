@@ -27,6 +27,7 @@ class Chain {
     std::unordered_map<uint64_t, std::weak_ptr<SourceUnit>> source_ids;
     std::multimap<int64_t, std::weak_ptr<SourceUnit>> video_media_index;
     std::vector<SyncSample> sync_samples;
+    SyncStepState sync_step;
     FreezeTracker freeze;
     FaultConfig fault;
     uint64_t sent = 0, matched_video = 0, decoded = 0, presented = 0, ambiguous = 0, received_bytes = 0;
