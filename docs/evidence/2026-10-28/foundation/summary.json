@@ -1,0 +1,12 @@
+﻿{
+    "physical_network_disconnection":  "not_performed",
+    "ordinary_peak_private_mib":  203.0625,
+    "ui_cpu_peak_pct":  2.746520892362335,
+    "ui_cpu_mean_pct":  1.1363419529289687,
+    "web_sha256":  "822F7B37389CD73323C5D97664CC12CB778F959AB568D917F08F151D11489622",
+    "ordinary_cpu_peak_pct":  1.0767355115847648,
+    "app_sha256":  "5193082254535C2BFECB642C04970A6ADDE204E131694BE5ED9D040E0150294F",
+    "stability_acceptance":  "not_run",
+    "native_edge_chrome":  "not_verified",
+    "ui_peak_private_mib":  134.89453125
+}

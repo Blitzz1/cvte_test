@@ -1,0 +1,12 @@
+﻿{
+    "network_connections":  [
+
+                            ],
+    "events_after":  27,
+    "config_warning":  450,
+    "retained":  true,
+    "events_before":  27,
+    "history_before":  300,
+    "config_revision":  4,
+    "history_after":  300
+}

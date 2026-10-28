@@ -1,0 +1,80 @@
+﻿{
+    "passed":  true,
+    "scope":  "Local dependency readiness only. No downloads, no system network changes, no claim of physical network-disconnection testing.",
+    "files":  [
+                  {
+                      "exists":  true,
+                      "path":  "runtime/avqm.exe"
+                  },
+                  {
+                      "exists":  true,
+                      "path":  "third_party/mediamtx/mediamtx.exe"
+                  },
+                  {
+                      "exists":  true,
+                      "path":  "web/index.html"
+                  },
+                  {
+                      "exists":  true,
+                      "path":  "web/app.js"
+                  },
+                  {
+                      "exists":  true,
+                      "path":  "web/style.css"
+                  },
+                  {
+                      "exists":  true,
+                      "path":  "web/vendor/hls.min.js"
+                  }
+              ],
+    "binary_sha256":  "5193082254535C2BFECB642C04970A6ADDE204E131694BE5ED9D040E0150294F",
+    "runtime_dlls":  [
+                         {
+                             "name":  "avcodec-62.dll",
+                             "matched":  true
+                         },
+                         {
+                             "name":  "avdevice-62.dll",
+                             "matched":  true
+                         },
+                         {
+                             "name":  "avfilter-11.dll",
+                             "matched":  true
+                         },
+                         {
+                             "name":  "avformat-62.dll",
+                             "matched":  true
+                         },
+                         {
+                             "name":  "avutil-60.dll",
+                             "matched":  true
+                         },
+                         {
+                             "name":  "swresample-6.dll",
+                             "matched":  true
+                         },
+                         {
+                             "name":  "swscale-9.dll",
+                             "matched":  true
+                         }
+                     ],
+    "sources":  [
+                    {
+                        "exists":  true,
+                        "path":  "data/media/sample-3m.mp4"
+                    },
+                    {
+                        "exists":  true,
+                        "path":  "data/media/sample-3m.mp4"
+                    },
+                    {
+                        "exists":  true,
+                        "path":  "data/media/sample-3m.mp4"
+                    },
+                    {
+                        "exists":  true,
+                        "path":  "data/media/sample-3m.mp4"
+                    }
+                ],
+    "local_hls_matches_lock":  true
+}

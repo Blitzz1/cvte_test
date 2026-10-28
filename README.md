@@ -66,3 +66,4 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/stop.ps1
 当前已补充像素缓存预算、异步原始记录和重连代次隔离。默认完整解码1080p30，软件观测像素按320×180缓存；浏览器额外预览保持原始分辨率。settings中的video_queue_mib默认20、video_total_mib默认64，分别限制每路排队像素与全局持有的CPU像素，不等于整个进程内存上限。默认decoder_threads为1，构建并行数为2。资源配置及生效规则见实施接口文档。
 
 本轮四路短回归私有内存峰值约128MiB，恢复输出约30fps；长时间稳定性仍待验收。验证记录见[性能与测量修正验证记录](docs/性能与测量修正验证记录.md)。需要重复短回归时使用scripts/validate-short.ps1，显式指定-Chains 1或4和-Seconds；脚本有资源保护并自动结束本轮检测程序和媒体服务器。不要用短测通过替代一小时验收。
+基础功能本轮回归见[闭环验收记录](docs/基础功能闭环验收记录.md)：普通B帧素材的固定偏差／渐进漂移、内置浏览器操作、服务断开／重连、重启持久化及本地依赖检查已有证据；四路一小时仍待验收。运行前可执行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/check-runtime.ps1` 检查本地依赖。页面人工验收可用 `scripts/validate-interactive.ps1 -Seconds 240`，最长300秒，自动收尾。

@@ -1,0 +1,74 @@
+﻿[
+    {
+        "stage":  "baseline",
+        "latency_ms":  463.987294117647,
+        "sync_ms":  -13.151,
+        "fps":  24.21393007218778,
+        "generation":  4,
+        "sync_validity":  "valid",
+        "unknown":  0
+    },
+    {
+        "stage":  "audio_delay",
+        "latency_ms":  461.8586250000001,
+        "sync_ms":  -362.488,
+        "fps":  24.118445686767718,
+        "generation":  4,
+        "sync_validity":  "valid",
+        "unknown":  15
+    },
+    {
+        "stage":  "audio_recovery",
+        "latency_ms":  454.71704347826096,
+        "sync_ms":  -10.157,
+        "fps":  24.34089422360154,
+        "generation":  4,
+        "sync_validity":  "valid",
+        "unknown":  0
+    },
+    {
+        "stage":  "video_delay",
+        "latency_ms":  1256.2739565217387,
+        "sync_ms":  791.016,
+        "fps":  23.755373362170292,
+        "generation":  4,
+        "sync_validity":  "valid",
+        "unknown":  0
+    },
+    {
+        "stage":  "video_recovery",
+        "latency_ms":  457.34324999999995,
+        "sync_ms":  -13.981,
+        "fps":  24.17459523319025,
+        "generation":  4,
+        "sync_validity":  "valid",
+        "unknown":  2
+    },
+    {
+        "stage":  "reconnect",
+        "latency_ms":  null,
+        "sync_ms":  null,
+        "fps":  0.0,
+        "generation":  9,
+        "sync_validity":  "video_reference_unavailable",
+        "unknown":  0
+    },
+    {
+        "stage":  "udp_packet_loss",
+        "latency_ms":  431.90316666666666,
+        "sync_ms":  null,
+        "fps":  24.134435702415512,
+        "generation":  9,
+        "sync_validity":  "video_reference_unavailable",
+        "unknown":  0
+    },
+    {
+        "stage":  "final_recovery",
+        "latency_ms":  449.2421666666666,
+        "sync_ms":  -11.925,
+        "fps":  24.09205574500165,
+        "generation":  9,
+        "sync_validity":  "valid",
+        "unknown":  1
+    }
+]

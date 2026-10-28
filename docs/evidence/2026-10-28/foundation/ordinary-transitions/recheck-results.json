@@ -1,0 +1,38 @@
+﻿[
+    {
+        "exit":  0,
+        "stage":  "baseline"
+    },
+    {
+        "exit":  0,
+        "stage":  "audio_delay"
+    },
+    {
+        "exit":  0,
+        "stage":  "audio_recovery"
+    },
+    {
+        "exit":  0,
+        "stage":  "video_delay"
+    },
+    {
+        "exit":  0,
+        "stage":  "video_recovery"
+    },
+    {
+        "exit":  0,
+        "stage":  "reconnect"
+    },
+    {
+        "exit":  0,
+        "stage":  "udp_packet_loss"
+    },
+    {
+        "exit":  0,
+        "stage":  "final_recovery"
+    },
+    {
+        "exit":  0,
+        "stage":  "drift"
+    }
+]

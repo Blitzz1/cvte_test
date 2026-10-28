@@ -1,0 +1,51 @@
+Start testing: Oct 28 00:15 中国标准时间
+----------------------------------------------------------
+1/3 Testing: detection_core
+1/3 Test: detection_core
+Command: "C:/Users/user/Desktop/videoquality/build/core_tests.exe"
+Directory: C:/Users/user/Desktop/videoquality/build
+"detection_core" start time: Oct 28 00:15 中国标准时间
+Output:
+----------------------------------------------------------
+All detection core cases passed
+<end of output>
+Test time =   0.63 sec
+----------------------------------------------------------
+Test Passed.
+"detection_core" end time: Oct 28 00:15 中国标准时间
+"detection_core" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/3 Testing: video_conversion
+2/3 Test: video_conversion
+Command: "C:/Users/user/Desktop/videoquality/runtime/video_convert_tests.exe"
+Directory: C:/Users/user/Desktop/videoquality/build
+"video_conversion" start time: Oct 28 00:15 中国标准时间
+Output:
+----------------------------------------------------------
+Video conversion bounds and guard bytes passed
+<end of output>
+Test time =   0.57 sec
+----------------------------------------------------------
+Test Passed.
+"video_conversion" end time: Oct 28 00:15 中国标准时间
+"video_conversion" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/3 Testing: storage_persistence
+3/3 Test: storage_persistence
+Command: "C:/Users/user/Desktop/videoquality/build/storage_tests.exe"
+Directory: C:/Users/user/Desktop/videoquality/build
+"storage_persistence" start time: Oct 28 00:15 中国标准时间
+Output:
+----------------------------------------------------------
+Storage persistence and retention cases passed
+<end of output>
+Test time =   2.33 sec
+----------------------------------------------------------
+Test Passed.
+"storage_persistence" end time: Oct 28 00:15 中国标准时间
+"storage_persistence" time elapsed: 00:00:02
+----------------------------------------------------------
+
+End testing: Oct 28 00:15 中国标准时间
