@@ -7,7 +7,7 @@
       "protocol": "rtsp",
       "publish_url": "rtsp://127.0.0.1:8554/chain1",
       "pull_url": "rtsp://127.0.0.1:8555/chain1",
-      "source": "data/media/sample-3m.mp4",
+      "source": "data/media/sintel-trailer.mp4",
       "transport": "udp"
     },
     {
@@ -16,7 +16,7 @@
       "id": "rtsp-tcp",
       "protocol": "rtsp",
       "publish_url": "rtsp://127.0.0.1:8554/chain2",
-      "source": "data/media/sample-3m.mp4",
+      "source": "data/media/sintel-trailer.mp4",
       "transport": "tcp"
     },
     {
@@ -25,7 +25,7 @@
       "id": "rtmp-3",
       "protocol": "rtmp",
       "publish_url": "rtmp://127.0.0.1:1935/chain3",
-      "source": "data/media/sample-3m.mp4"
+      "source": "data/media/sintel-trailer.mp4"
     },
     {
       "alias": "RTMP · 链路4",
@@ -33,7 +33,7 @@
       "id": "rtmp-4",
       "protocol": "rtmp",
       "publish_url": "rtmp://127.0.0.1:1935/chain4",
-      "source": "data/media/sample-3m.mp4"
+      "source": "data/media/sintel-trailer.mp4"
     },
     {
       "alias": "扩展链路5",
@@ -41,7 +41,7 @@
       "id": "chain-5",
       "protocol": "rtsp",
       "publish_url": "rtsp://127.0.0.1:8554/chain5",
-      "source": "data/media/sample-3m.mp4",
+      "source": "data/media/sintel-trailer.mp4",
       "transport": "tcp"
     },
     {
@@ -50,7 +50,7 @@
       "id": "chain-6",
       "protocol": "rtmp",
       "publish_url": "rtmp://127.0.0.1:1935/chain6",
-      "source": "data/media/sample-3m.mp4",
+      "source": "data/media/sintel-trailer.mp4",
       "transport": "tcp"
     },
     {
@@ -59,7 +59,7 @@
       "id": "chain-7",
       "protocol": "rtsp",
       "publish_url": "rtsp://127.0.0.1:8554/chain7",
-      "source": "data/media/sample-3m.mp4",
+      "source": "data/media/sintel-trailer.mp4",
       "transport": "tcp"
     },
     {
@@ -68,7 +68,7 @@
       "id": "chain-8",
       "protocol": "rtmp",
       "publish_url": "rtmp://127.0.0.1:1935/chain8",
-      "source": "data/media/sample-3m.mp4",
+      "source": "data/media/sintel-trailer.mp4",
       "transport": "tcp"
     }
   ],

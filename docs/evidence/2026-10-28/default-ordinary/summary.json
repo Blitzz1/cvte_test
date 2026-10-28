@@ -1,0 +1,12 @@
+{
+    "source":  "data/media/sintel-trailer.mp4",
+    "app_peak_private_mib":  213.1875,
+    "deadline_seconds":  90,
+    "project_processes_remaining":  0,
+    "config":  "config/app.json",
+    "scope":  "Bounded four-chain ordinary-material smoke test, not accuracy or one-hour acceptance. UDP unknown-missing upper bound requires investigation.",
+    "last_snapshot_elapsed_seconds":  84.0083792,
+    "revision":  4,
+    "source_sha256":  "34BBD52A4B89FDF63C8ACE50B268DA26653A59508288100CD3C23DE276DB7931",
+    "samples":  72
+}

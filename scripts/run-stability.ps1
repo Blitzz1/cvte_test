@@ -5,9 +5,9 @@ Set-Location $root
 foreach($name in 'avqm','mediamtx'){
     if(Get-Process $name -ErrorAction SilentlyContinue|Where-Object {$_.Path -and $_.Path.StartsWith($root,[StringComparison]::OrdinalIgnoreCase)}){throw 'Stop existing project media processes before a new acceptance run'}
 }
-& "$PSScriptRoot/check-runtime.ps1" | Out-Null
+& "$PSScriptRoot/check-runtime.ps1" -Config 'config/stability-four.json' | Out-Null
 if($LASTEXITCODE){throw 'Local dependency preflight failed'}
-$config=Get-Content config/app.json -Raw -Encoding UTF8|ConvertFrom-Json
+$config=Get-Content config/stability-four.json -Raw -Encoding UTF8|ConvertFrom-Json
 $enabled=@($config.chains|Where-Object enabled)
 if($enabled.Count -ne 4 -or @($enabled|Where-Object {$_.direction -eq 'pull' -or $_.has_audio -eq $false}).Count){throw 'Use four complete managed chains with audio for basic acceptance'}
 $config|Add-Member -NotePropertyName show_monitor -NotePropertyValue $false -Force

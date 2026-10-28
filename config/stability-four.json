@@ -1,0 +1,58 @@
+{
+  "chains": [
+    {
+      "alias": "RTSP UDP · 链路1",
+      "enabled": true,
+      "id": "rtsp-udp",
+      "protocol": "rtsp",
+      "publish_url": "rtsp://127.0.0.1:8554/chain1",
+      "pull_url": "rtsp://127.0.0.1:8555/chain1",
+      "source": "data/media/sample-3m.mp4",
+      "transport": "udp"
+    },
+    {
+      "alias": "RTSP TCP · 链路2",
+      "enabled": true,
+      "id": "rtsp-tcp",
+      "protocol": "rtsp",
+      "publish_url": "rtsp://127.0.0.1:8554/chain2",
+      "source": "data/media/sample-3m.mp4",
+      "transport": "tcp"
+    },
+    {
+      "alias": "RTMP · 链路3",
+      "enabled": true,
+      "id": "rtmp-3",
+      "protocol": "rtmp",
+      "publish_url": "rtmp://127.0.0.1:1935/chain3",
+      "source": "data/media/sample-3m.mp4"
+    },
+    {
+      "alias": "RTMP · 链路4",
+      "enabled": true,
+      "id": "rtmp-4",
+      "protocol": "rtmp",
+      "publish_url": "rtmp://127.0.0.1:1935/chain4",
+      "source": "data/media/sample-3m.mp4"
+    }
+  ],
+  "port": 8080,
+  "revision": 3,
+  "settings": {
+    "output_width": 320,
+    "output_height": 180,
+    "video_queue_frames": 96,
+    "video_queue_mib": 20,
+    "video_total_mib": 64,
+    "decoder_threads": 1,
+    "delay_critical_ms": 1000,
+    "delay_warning_ms": 400,
+    "hold_ms": 3000,
+    "loss_critical_pct": 5,
+    "loss_warning_pct": 1,
+    "recovery_ms": 3000,
+    "resolution_timeout_ms": 5000,
+    "retention_days": 7,
+    "webhook": "http://127.0.0.1:8080/webhook-demo"
+  }
+}

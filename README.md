@@ -7,12 +7,12 @@ Windows 本机音视频完整链路检测：C++20 程序推送普通 H.264/AAC �
 已准备依赖和构建产物的本机，在项目目录执行一条命令：
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1 -Seconds 300
 ```
 
-脚本启动本项目 MediaMTX 和检测程序，然后打开 `http://127.0.0.1:8080`。默认四条完整链路，源文件在 `config/app.json` 配置；运行期间不联网下载依赖。第一次生成测试素材可执行 `scripts/make-sample.ps1 -Seconds 300 -OutputName sample-3m.mp4`（使用相同的 PowerShell 调用前缀）。也可以直接使用自己的同步 H.264/AAC 文件。
+脚本启动本项目 MediaMTX 和检测程序，然后打开 `http://127.0.0.1:8080`。默认四条独立完整链路共用本地 Sintel 官方预告片 `data/media/sintel-trailer.mp4`（H.264／AAC，1920×1080、24fps，约52秒，含B帧），循环播放且不植入检测标记。源文件在 `config/app.json` 配置；运行期间不联网下载依赖。素材已在本机准备好，也可以逐路使用自己的同步 H.264/AAC 文件。来源、许可及哈希见[第三方说明](docs/第三方组件与素材.md)。
 
-默认是持续运行的交互模式，使用后需执行停止命令。办公本上的自动化测试应使用明确时限，例如：
+上述命令运行5分钟后自动清理检测程序和媒体服务。省略 `-Seconds` 才是持续运行模式，使用后需执行停止命令；关闭浏览器不会停止后台。办公本上的自动化测试应使用明确时限，例如：
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1 -Seconds 120 -NoBrowser
@@ -26,7 +26,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
 # 核心单元测试
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1 -CoreOnly
 # 八条完整链路配置
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1 -Config config/eight-chains.json
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1 -Config config/eight-chains.json -Seconds 300
 # 关闭本项目登记的进程
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/stop.ps1
 ```
@@ -45,7 +45,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/stop.ps1
 
 网页“运行配置”保存阈值等配置立即生效；连接／素材修改需要重启相应链路，增删链路需要重启应用。接口校验、配置版本冲突及异步任务结果都会返回明确结果。Webhook 当前支持 HTTP，可用内置本机接收器演示，默认地址见配置。
 
-持久化指标／事件：`data/quality.db`；逐帧旁路事实：`data/observations/*.jsonl`；独立注入真值：`*-truth.jsonl`；轮转运行日志：`data/logs/`；本机测试快照：`artifacts/`。这些运行产物不纳入 Git。
+持久化指标／事件：`data/quality.db`；逐帧旁路事实：`data/observations/*.jsonl`；独立注入真值：`*-truth.jsonl`；轮转运行日志：`data/logs/`；本机测试快照：`artifacts/`。关闭、重启程序后历史仍可查询，默认保留7天；实时5分钟曲线重新积累，旧数据通过历史范围查询。停止不会清空数据，后台停止期间不产生新样本。默认不另存完整接收录像。这些运行产物不纳入 Git。
 
 | 目录 | 职责 |
 |---|---|
@@ -61,9 +61,11 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/stop.ps1
 
 逐项进度见[需求追踪](docs/需求追踪与验收状态.md)，现场操作见[演示指南](docs/现场演示指南.md)，素材来源与许可见[第三方说明](docs/第三方组件与素材.md)。
 
+最新配置、数据保留及素材切换检查统一见[当前版本与使用说明](docs/当前版本与使用说明.md)。普通素材四路限时运行约24fps、自动清理完成，但UDP成熟窗口仍有较高未知缺失，需继续调查；不能把可能损失上界当作确定网络丢包率，或宣称所有质量指标均已通过。
+
 ## 办公本短测与资源设置
 
-当前已补充像素缓存预算、异步原始记录和重连代次隔离。默认完整解码1080p30，软件观测像素按320×180缓存；浏览器额外预览保持原始分辨率。settings中的video_queue_mib默认20、video_total_mib默认64，分别限制每路排队像素与全局持有的CPU像素，不等于整个进程内存上限。默认decoder_threads为1，构建并行数为2。资源配置及生效规则见实施接口文档。
+当前已补充像素缓存预算、异步原始记录和重连代次隔离。默认普通素材完整解码1080p24；基础1080p30负载验证使用独立的 `config/stability-four.json` 合成素材配置，历史一小时结果不等于普通素材一小时验收。软件观测像素按320×180缓存；浏览器额外预览保持原始分辨率。settings中的video_queue_mib默认20、video_total_mib默认64，分别限制每路排队像素与全局持有的CPU像素，不等于整个进程内存上限。默认decoder_threads为1，构建并行数为2。资源配置及生效规则见实施接口文档。
 
 本轮四路短回归私有内存峰值约128MiB，恢复输出约30fps；本次四路一小时结果已回填，质量事件和限制见最新报告。验证记录见[性能与测量修正验证记录](docs/性能与测量修正验证记录.md)。需要重复短回归时使用scripts/validate-short.ps1，显式指定-Chains 1或4和-Seconds；脚本有资源保护并自动结束本轮检测程序和媒体服务器。不要用短测通过替代一小时验收。
 基础功能本轮回归见[闭环验收记录](docs/基础功能闭环验收记录.md)：普通B帧素材的固定偏差／渐进漂移、内置浏览器操作、服务断开／重连、重启持久化及本地依赖检查已有证据；四路一小时运行／资源门槛已达到，附质量事件和观测限制。运行前可执行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/check-runtime.ps1` 检查本地依赖。页面人工验收可用 `scripts/validate-interactive.ps1 -Seconds 240`，最长300秒，自动收尾。
