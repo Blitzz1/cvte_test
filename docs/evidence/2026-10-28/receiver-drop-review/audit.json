@@ -1,0 +1,12 @@
+{
+  "source": "data/observations/rtmp-4-1793179779344.jsonl",
+  "method": "Unique matched video IDs submitted to decoder minus IDs observed at decoded_output; entire session, not a single mature loss window.",
+  "video_submitted_unique": 9859,
+  "submitted_without_decoded_output": 810,
+  "submission_errors_in_without_output": 0,
+  "without_output_before_first_discard": 0,
+  "without_output_during_discard_span": 803,
+  "without_output_after_last_discard": 7,
+  "unmapped_decoded_output": 0,
+  "limit": "Temporal association supports decoder-stage investigation, not proof of every missing frame causal dependency. Fault settings changed during session; these totals are not a measured 30-percent experiment."
+}
