@@ -3,6 +3,9 @@ moq: no
 logDestinations: [stdout]
 readTimeout: 10s
 writeTimeout: 10s
+# Large H.264 IDRs arrive as UDP bursts even over loopback. Keep the ingest
+# socket buffer large enough for complete fragmented frames (bytes per socket).
+udpReadBufferSize: 4194304
 rtsp: yes
 rtspAddress: 127.0.0.1:8554
 rtspTransports: [udp, tcp]

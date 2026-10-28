@@ -692,7 +692,16 @@ void Chain::receive() {
                         std::memcpy(p->opaque_ref->data, &unit->id, sizeof(uint64_t));
                 }
                 auto packet_pts = p->pts;
+                const auto packet_flags = p->flags;
+                const auto packet_size = p->size;
                 rc = avcodec_send_packet(codec, p);
+                if (video) {
+                    std::lock_guard lock(mutex);
+                    observe({{"stage", "decode_submission"}, {"id", unit ? unit->id : 0},
+                             {"packet_pts", packet_pts}, {"packet_flags", packet_flags},
+                             {"packet_size", packet_size}, {"result", rc}, {"mono_us", now_us()},
+                             {"generation", generation}});
+                }
                 av_packet_unref(p);
                 if (rc < 0) {
                     pending[idx].erase(packet_pts);
@@ -722,6 +731,12 @@ void Chain::receive() {
                         auto entry = source_ids.find(source_id);
                         if (entry != source_ids.end())
                             u = entry->second.lock();
+                    }
+                    if (video) {
+                        std::lock_guard lock(mutex);
+                        observe({{"stage", "decoded_output"}, {"id", u ? u->id : 0},
+                                 {"frame_pts", frame->pts}, {"best_effort_pts", fpts},
+                                 {"mono_us", now_us()}, {"generation", generation}});
                     }
                     int64_t media = 0, due = 0;
                     {

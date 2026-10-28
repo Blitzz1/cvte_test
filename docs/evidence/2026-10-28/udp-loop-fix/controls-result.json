@@ -1,0 +1,8 @@
+﻿{
+    "passed":  true,
+    "scope":  "Idle startup, start one, add three, stop one with session isolation, restart and no-audio applicability. Not a stability test.",
+    "source":  "data/media/sample-3m.mp4",
+    "video_only":  "data/media/sample-1080p30-no-audio.mp4",
+    "binary_sha256":  "E657B1B90D3B101156D6698B23D913A64ED008E69ACBC42F52B46DD6D62C6BB8",
+    "seconds":  25.1471327
+}

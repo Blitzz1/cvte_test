@@ -1,0 +1,14 @@
+[
+    {
+        "sha256":  "1E707086BDD701EF4F76B36BA34BE47C876476C41B7E9031B2ADAF75C96C9CF5",
+        "path":  "data/media/sample-3m.mp4"
+    },
+    {
+        "sha256":  "BEA67603ACFF9652BA718B58C3C40DD13222D276E4E2937A9A37BA5DF3C9E27F",
+        "path":  "data/media/sample-1080p30-no-audio.mp4"
+    },
+    {
+        "sha256":  "34BBD52A4B89FDF63C8ACE50B268DA26653A59508288100CD3C23DE276DB7931",
+        "path":  "data/media/sintel-trailer.mp4"
+    }
+]

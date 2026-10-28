@@ -1,0 +1,203 @@
+{
+    "project_processes_remaining":  0,
+    "controls_directory":  "artifacts/controls-20261028-124628",
+    "windows":  [
+                    {
+                        "before":  {
+                                       "source":  24,
+                                       "matched":  24,
+                                       "submitted":  24,
+                                       "decoded":  0,
+                                       "presented":  0,
+                                       "duplicates":  0,
+                                       "max_receive_delay_ms":  374.72
+                                   },
+                        "second":  14,
+                        "after":  {
+                                      "source":  24,
+                                      "matched":  24,
+                                      "submitted":  24,
+                                      "decoded":  24,
+                                      "presented":  24,
+                                      "duplicates":  0,
+                                      "max_receive_delay_ms":  70.574
+                                  }
+                    },
+                    {
+                        "before":  {
+                                       "source":  24,
+                                       "matched":  24,
+                                       "submitted":  24,
+                                       "decoded":  0,
+                                       "presented":  0,
+                                       "duplicates":  0,
+                                       "max_receive_delay_ms":  67.387
+                                   },
+                        "second":  15,
+                        "after":  {
+                                      "source":  24,
+                                      "matched":  24,
+                                      "submitted":  24,
+                                      "decoded":  24,
+                                      "presented":  24,
+                                      "duplicates":  0,
+                                      "max_receive_delay_ms":  70.183
+                                  }
+                    },
+                    {
+                        "before":  {
+                                       "source":  24,
+                                       "matched":  24,
+                                       "submitted":  24,
+                                       "decoded":  0,
+                                       "presented":  0,
+                                       "duplicates":  0,
+                                       "max_receive_delay_ms":  71.332
+                                   },
+                        "second":  16,
+                        "after":  {
+                                      "source":  24,
+                                      "matched":  24,
+                                      "submitted":  24,
+                                      "decoded":  24,
+                                      "presented":  24,
+                                      "duplicates":  0,
+                                      "max_receive_delay_ms":  71.727
+                                  }
+                    },
+                    {
+                        "before":  {
+                                       "source":  24,
+                                       "matched":  24,
+                                       "submitted":  24,
+                                       "decoded":  0,
+                                       "presented":  0,
+                                       "duplicates":  0,
+                                       "max_receive_delay_ms":  64.0
+                                   },
+                        "second":  17,
+                        "after":  {
+                                      "source":  24,
+                                      "matched":  24,
+                                      "submitted":  24,
+                                      "decoded":  24,
+                                      "presented":  24,
+                                      "duplicates":  0,
+                                      "max_receive_delay_ms":  71.963
+                                  }
+                    },
+                    {
+                        "before":  {
+                                       "source":  24,
+                                       "matched":  24,
+                                       "submitted":  24,
+                                       "decoded":  14,
+                                       "presented":  14,
+                                       "duplicates":  0,
+                                       "max_receive_delay_ms":  79.943
+                                   },
+                        "second":  18,
+                        "after":  {
+                                      "source":  24,
+                                      "matched":  24,
+                                      "submitted":  24,
+                                      "decoded":  24,
+                                      "presented":  24,
+                                      "duplicates":  0,
+                                      "max_receive_delay_ms":  67.209
+                                  }
+                    },
+                    {
+                        "before":  null,
+                        "second":  66,
+                        "after":  {
+                                      "source":  24,
+                                      "matched":  24,
+                                      "submitted":  24,
+                                      "decoded":  24,
+                                      "presented":  24,
+                                      "duplicates":  0,
+                                      "max_receive_delay_ms":  68.253
+                                  }
+                    },
+                    {
+                        "before":  null,
+                        "second":  67,
+                        "after":  {
+                                      "source":  24,
+                                      "matched":  24,
+                                      "submitted":  24,
+                                      "decoded":  24,
+                                      "presented":  24,
+                                      "duplicates":  0,
+                                      "max_receive_delay_ms":  64.102
+                                  }
+                    },
+                    {
+                        "before":  null,
+                        "second":  68,
+                        "after":  {
+                                      "source":  24,
+                                      "matched":  24,
+                                      "submitted":  24,
+                                      "decoded":  24,
+                                      "presented":  24,
+                                      "duplicates":  0,
+                                      "max_receive_delay_ms":  66.859
+                                  }
+                    },
+                    {
+                        "before":  null,
+                        "second":  69,
+                        "after":  {
+                                      "source":  24,
+                                      "matched":  24,
+                                      "submitted":  24,
+                                      "decoded":  24,
+                                      "presented":  24,
+                                      "duplicates":  0,
+                                      "max_receive_delay_ms":  79.247
+                                  }
+                    },
+                    {
+                        "before":  null,
+                        "second":  70,
+                        "after":  {
+                                      "source":  24,
+                                      "matched":  24,
+                                      "submitted":  24,
+                                      "decoded":  24,
+                                      "presented":  24,
+                                      "duplicates":  0,
+                                      "max_receive_delay_ms":  69.26
+                                  }
+                    }
+                ],
+    "input_key_packet_bytes":  211372,
+    "before_directory":  "artifacts/short-20261028-124144-baseline",
+    "after_large_decoded_packets":  [
+                                        {
+                                            "generation":  2,
+                                            "id":  984,
+                                            "mono_us":  183749434095,
+                                            "packet_flags":  1,
+                                            "packet_pts":  1233355,
+                                            "packet_size":  211413,
+                                            "result":  0,
+                                            "stage":  "decode_submission"
+                                        },
+                                        {
+                                            "generation":  2,
+                                            "id":  4672,
+                                            "mono_us":  183801647827,
+                                            "packet_flags":  1,
+                                            "packet_pts":  5931713,
+                                            "packet_size":  211413,
+                                            "result":  0,
+                                            "stage":  "decode_submission"
+                                        }
+                                    ],
+    "config_change":  "MediaMTX udpReadBufferSize: operating-system default -\u003e 4194304 bytes",
+    "after_directory":  "artifacts/short-20261028-124417-baseline",
+    "note":  "Before/after are bounded experiments, not a one-hour stability test. Wall-second bins refer to source release time and should be read with exact per-frame evidence."
+}

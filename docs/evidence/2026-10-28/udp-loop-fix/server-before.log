@@ -1,0 +1,7 @@
+2026/10/28 12:42:01 WAR [RTSP] [session 210c9a71] 2 RTP packets lost
+2026/10/28 12:42:02 WAR [path chain1] 2 processing errors, last was: invalid FU-A packet (non-starting)
+2026/10/28 12:42:02 ERR [HLS] [muxer chain1] muxer instance crashed: muxer error: unable to extract DTS: too many reordered frames (107)
+2026/10/28 12:42:02 WAR [RTSP] [session 210c9a71] 46 RTP packets lost
+2026/10/28 12:42:02 WAR [path chain1] 27 processing errors, last was: invalid FU-A packet (non-starting)
+2026/10/28 12:42:10 WAR [HLS] [muxer chain3] segment duration changed from 5s to 8s - this will cause an error in iOS clients
+2026/10/28 12:42:10 WAR [HLS] [muxer chain4] segment duration changed from 5s to 8s - this will cause an error in iOS clients

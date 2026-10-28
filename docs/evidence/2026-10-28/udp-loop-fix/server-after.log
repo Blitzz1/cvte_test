@@ -1,0 +1,6 @@
+2026/10/28 12:44:40 WAR [HLS] [muxer chain4] segment duration changed from 5s to 8s - this will cause an error in iOS clients
+2026/10/28 12:44:41 WAR [HLS] [muxer chain3] segment duration changed from 5s to 8s - this will cause an error in iOS clients
+2026/10/28 12:45:01 WAR [HLS] [muxer chain4] segment duration changed from 8s to 10s - this will cause an error in iOS clients
+2026/10/28 12:45:01 WAR [HLS] [muxer chain2] segment duration changed from 9s to 10s - this will cause an error in iOS clients
+2026/10/28 12:45:01 WAR [HLS] [muxer chain3] segment duration changed from 8s to 10s - this will cause an error in iOS clients
+2026/10/28 12:45:01 WAR [HLS] [muxer chain1] segment duration changed from 9s to 10s - this will cause an error in iOS clients
