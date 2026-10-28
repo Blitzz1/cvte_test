@@ -32,6 +32,7 @@ Application::Application(std::filesystem::path r, std::filesystem::path config_p
         config["revision"] = 1;
     store = std::make_unique<Store>(root / "data/quality.db");
     for (auto &j : config.at("chains")) {
+        if (!j.contains("pull_url")) j["pull_url"] = j.at("publish_url");
         ChainConfig c;
         c.id = j.at("id");
         c.alias = j.value("alias", c.id);

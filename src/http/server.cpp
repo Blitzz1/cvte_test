@@ -60,6 +60,32 @@ void run_http(Application &app, int port) {
                       {"implementation", "C++ / FFmpeg / native software output"}});
     });
     server.Get("/api/v1/chains", [&](const auto &, auto &res) { respond(res, app.snapshot()); });
+    server.Get(R"(/api/v1/chains/([A-Za-z0-9_-]+)/preview.jpg)", [&](const auto &req, auto &res) {
+        auto chain = app.find(req.matches[1]);
+        if (!chain) { respond(res, {{"error", "chain not found"}}, 404); return; }
+        auto now = now_us();
+        chain->preview.request(now);
+        uint64_t generation{};
+        {
+            std::lock_guard lock(chain->mutex);
+            generation = chain->playback_generation;
+            res.set_header("X-Preview-State", chain->state);
+        }
+        res.set_header("Cache-Control", "no-store");
+        res.set_header("X-Preview-Generation", std::to_string(generation));
+        auto frame = chain->preview.latest();
+        if (!frame || frame->generation != generation) { res.status = 204; return; }
+        res.set_header("X-Preview-Sequence", std::to_string(frame->sequence));
+        res.set_header("X-Preview-Frame-Id", std::to_string(frame->frame_id));
+        res.set_header("X-Preview-Presented-Us", std::to_string(frame->observed_us));
+        res.set_header("X-Preview-Age-Ms", std::to_string((now_us() - frame->observed_us) / 1000));
+        res.set_header("X-Preview-Width", std::to_string(frame->width));
+        res.set_header("X-Preview-Height", std::to_string(frame->height));
+        if (req.has_param("after") && req.get_param_value("after") == std::to_string(frame->sequence)) {
+            res.status = 204; return;
+        }
+        res.set_content(frame->jpeg, "image/jpeg");
+    });
     server.Get("/api/v1/config", [&](const auto &, auto &res) {
         std::lock_guard lock(app.config_mutex);
         respond(res, app.config);
@@ -80,6 +106,7 @@ void run_http(Application &app, int port) {
             throw std::runtime_error("configure 1..8 complete chains");
         std::vector<std::string> ids;
         for (auto &item : next["chains"]) {
+            if (!item.contains("pull_url")) item["pull_url"] = item.at("publish_url");
             auto id = item.at("id").get<std::string>();
             if (id.empty() ||
                 id.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_") !=

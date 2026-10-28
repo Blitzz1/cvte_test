@@ -152,6 +152,7 @@ void Chain::discard_locked(uint64_t id, const std::string &reason, uint64_t gene
              {"mono_us", now_us()}});
 }
 void Chain::reset_playback_locked(const std::string &reason) {
+    preview.clear();
     for (auto &image : videos)
         discard_locked(image.frame_id, reason, image.generation);
     videos.clear();
@@ -196,6 +197,7 @@ void Chain::start() {
         state = "starting";
         error.clear();
         session = cfg.id + "-" + std::to_string(utc_ms());
+        preview.clear();
         started_us = now_us();
         source.clear();
         source_ids.clear();

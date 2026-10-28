@@ -1,5 +1,6 @@
 #pragma once
 #include "app/types.hpp"
+#include "playback/preview.hpp"
 #include <random>
 namespace avqm {
 struct SourceUnit {
@@ -30,6 +31,7 @@ class Chain {
     SyncStepState sync_step;
     FreezeTracker freeze;
     FaultConfig fault;
+    PreviewMirror preview;
     uint64_t sent = 0, matched_video = 0, decoded = 0, presented = 0, ambiguous = 0, received_bytes = 0;
     uint64_t source_sequence = 0, session_max_consecutive = 0;
     uint64_t playback_generation = 0;

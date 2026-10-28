@@ -1,0 +1,13 @@
+{
+  "checked_jpeg_responses": 93,
+  "unmatched_actual_presentations": 0,
+  "sessions": [
+    "rtmp-3-1793176316230",
+    "rtmp-4-1793176316230",
+    "rtsp-tcp-1793176316230",
+    "rtsp-tcp-1793176345792",
+    "rtsp-udp-1793176316225"
+  ],
+  "passed": true,
+  "scope": "Every delivered JPEG identity/time equals a real WIC software_present record. No optical calibration or one-hour stability claim."
+}

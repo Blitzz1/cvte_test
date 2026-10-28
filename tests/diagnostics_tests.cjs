@@ -37,7 +37,7 @@ vm.runInContext("chains=[fixture];selected=fixture.id;config={chains:[{id:fixtur
 assert.equal(elements.get('fault-packet').disabled, true);
 assert.equal(elements.get('fault-drop').value, 100);
 assert.match(elements.get('diagnostics').innerHTML, /接收后、解码前主动丢弃|呈现阶段丢弃/);
-assert.match(elements.get('preview-scope').textContent, /不经过本程序/);
+assert.match(elements.get('preview-scope').textContent, /WIC实际输出/);
 assert.match(elements.get('fault-scope').textContent, /不支持UDP/);
 (async () => {
   context.requests = [];

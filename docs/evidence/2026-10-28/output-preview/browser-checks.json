@@ -1,0 +1,17 @@
+{
+  "normal": {
+    "frame": "7185",
+    "generation": "2",
+    "imageHeight": 300,
+    "imageWidth": 500,
+    "originalVideoHidden": true,
+    "status": "实际输出帧 7185 · 播放批次 2 · 画面来自已完成的WIC绘制"
+  },
+  "frozen": {
+    "frame": "16728",
+    "sequence": "1041",
+    "status": "实际输出帧 16728 · 播放批次 2 · 已1406ms没有新画面，保留最后输出",
+    "width": 500
+  },
+  "scope": "Real one-chain browser test; presentation drop caused actual WIC mirror freeze."
+}

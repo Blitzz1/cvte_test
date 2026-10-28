@@ -407,6 +407,18 @@ void Output::run(int seconds) {
                                                  (observed - render_start) / 1000.0);
                 else
                     p.app.chains[i]->did_drop(v.frame_id, "output_backend_failed", v.generation);
+                if (SUCCEEDED(result) && p.app.chains[i]->preview.wanted(observed)) {
+                    UINT bytes{}, stride{};
+                    BYTE *data{};
+                    if (SUCCEEDED(pixels->GetStride(&stride)) &&
+                        SUCCEEDED(pixels->GetDataPointer(&bytes, &data)) && bytes >= stride * 600) {
+                        auto &chain = *p.app.chains[i];
+                        std::lock_guard lock(chain.mutex);
+                        if (!chain.stop_requested && chain.playback_generation == v.generation)
+                            chain.preview.capture(data + (i / cols * h) * stride + (i % cols * w) * 4,
+                                                   int(stride), w, h, v.frame_id, v.generation, observed);
+                    }
+                }
             }
             if (pixels && !IsIconic(p.window) && IsWindowVisible(p.window)) {
                 UINT bytes{}, stride{};

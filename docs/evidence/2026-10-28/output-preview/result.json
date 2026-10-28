@@ -1,0 +1,11 @@
+﻿{
+    "seconds":  34.548131999999995,
+    "frozen_observations":  64,
+    "passed":  true,
+    "peak_private_mib":  114.04296875,
+    "scope":  "Bounded four-chain actual WIC preview, 100% presentation discard freeze, recovery, stop/restart and no HLS. Not a one-hour stability test.",
+    "server_peak_mib":  90.015625,
+    "binary_sha256":  "FBBE19D7A14C1342AFD853F5E82487C85C78ABD56A576BA6928779D6220A4E45",
+    "max_combined_cpu_pct":  5,
+    "hls_muxers":  0
+}

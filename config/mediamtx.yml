@@ -15,7 +15,7 @@ rtmp: yes
 rtmpAddress: 127.0.0.1:1935
 hls: yes
 hlsAddress: 127.0.0.1:8888
-hlsAlwaysRemux: yes
+hlsAlwaysRemux: no
 hlsVariant: lowLatency
 hlsSegmentCount: 7
 hlsSegmentDuration: 1s
