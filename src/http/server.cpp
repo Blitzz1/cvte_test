@@ -107,8 +107,8 @@ void run_http(Application &app, int port) {
         auto s = next.value("settings", Json::object());
         auto validated = parse_settings(s);
         next["revision"] = app.config.value("revision", 1) + 1;
-        if (!next["chains"].is_array() || next["chains"].size() < 1 || next["chains"].size() > 8)
-            throw std::runtime_error("configure 1..8 complete chains");
+        if (!next["chains"].is_array() || next["chains"].size() > 8)
+            throw std::runtime_error("configure 0..8 complete chains");
         std::vector<std::string> ids;
         for (auto &item : next["chains"]) {
             if (!item.contains("pull_url")) item["pull_url"] = item.at("publish_url");
@@ -142,7 +142,7 @@ void run_http(Application &app, int port) {
                       {"connection_changes",
                        "restart affected chain; adding/removing chains requires application restart"}});
     });
-    server.Post(R"(/api/v1/chains/([^/]+)/(start|stop|restart))", [&](const auto &req, auto &res) {
+    server.Post(R"(/api/v1/chains/([^/]+)/(start|stop|restart|close))", [&](const auto &req, auto &res) {
         auto c = app.find(req.matches[1]);
         if (!c) {
             respond(res, {{"error", "chain not found"}}, 404);
@@ -182,16 +182,13 @@ void run_http(Application &app, int port) {
         respond(res, {{"applied", true}});
     });
     server.Get(R"(/api/v1/chains/([^/]+)/metrics)", [&](const auto &req, auto &res) {
-        auto c = app.find(req.matches[1]);
-        if (!c) {
-            respond(res, {{"error", "not found"}}, 404);
-            return;
-        }
+        // Historical data outlives a closed page and does not require a live Chain.
+        auto id = req.matches[1].str();
         int64_t to = req.has_param("to") ? std::stoll(req.get_param_value("to")) : utc_ms() + 1;
         int64_t from = req.has_param("from") ? std::stoll(req.get_param_value("from")) : to - 3600000;
         if (from >= to || to - from > 8LL * 86400000)
             throw std::runtime_error("invalid time range");
-        respond(res, app.store->history(c->cfg.id, from, to));
+        respond(res, app.store->history(id, from, to));
     });
     server.Get("/api/v1/events", [&](const auto &req, auto &res) {
         auto chain = req.has_param("chain") ? req.get_param_value("chain") : "";
@@ -199,10 +196,14 @@ void run_http(Application &app, int port) {
         auto from = req.has_param("from") ? std::stoll(req.get_param_value("from")) : to - 86400000;
         respond(res, app.store->events(chain, from, to));
     });
+    server.Get("/api/v1/audio", [&](const auto &, auto &res) {
+        respond(res, {{"chain_id", app.output->selected_audio_id()}});
+    });
     server.Post("/api/v1/audio", [&](const auto &req, auto &res) {
         auto j = Json::parse(req.body);
-        app.output->select_audio(j.value("index", -1));
-        respond(res, {{"selected", j.value("index", -1)}});
+        if (j.contains("chain_id")) app.output->select_audio_chain(j.at("chain_id"));
+        else app.output->select_audio(j.value("index", -1));
+        respond(res, {{"selected", j.value("index", -1)}, {"chain_id", app.output->selected_audio_id()}});
     });
     server.Post("/api/v1/shutdown", [&](const auto &, auto &res) {
         app.quit = true;

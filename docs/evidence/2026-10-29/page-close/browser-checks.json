@@ -1,0 +1,12 @@
+{
+  "empty": {
+    "addEnabled": true,
+    "cards": 0,
+    "closeDisabled": true,
+    "connection": "● 已连接",
+    "detailHidden": true,
+    "emptyVisible": true,
+    "tabs": 0
+  },
+  "canCreateAfterClose": true
+}

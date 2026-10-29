@@ -58,6 +58,8 @@ void Services::control_loop() {
             if (!c)
                 throw std::runtime_error("chain not found");
             std::string action = job["action"];
+            if (action == "close")
+                app_.close_chain(c);
             if (action == "stop" || action == "restart")
                 c->stop();
             if (action == "start" || action == "restart") {

@@ -96,13 +96,15 @@ std::shared_ptr<Chain> Application::add_chain(const Json &request) {
     auto source_path = std::filesystem::path(source);
     if (!std::filesystem::is_regular_file(source_path.is_absolute() ? source_path : root / source_path))
         throw std::runtime_error("素材文件不存在");
-    int index = 1;
+    int index = config.value("next_chain_index", 1);
     for (;; ++index) {
         auto id = "chain-" + std::to_string(index);
         auto path = "/chain" + std::to_string(index);
         bool used = false;
         for (auto &j : config["chains"])
             if (j.at("id") == id || j.value("publish_url", "").ends_with(path)) used = true;
+        for (auto &current : chains)
+            if (current->cfg.id == id || current->cfg.publish_url.ends_with(path)) used = true;
         if (!used) break;
     }
     ChainConfig c;
@@ -122,6 +124,7 @@ std::shared_ptr<Chain> Application::add_chain(const Json &request) {
                  {"pull_url", c.pull_url}, {"has_audio", c.has_audio}};
     auto next = config;
     next["chains"].push_back(item);
+    next["next_chain_index"] = index + 1;
     next["revision"] = config.value("revision", 1) + 1;
     auto temp = config_file;
     temp += ".tmp";
@@ -132,6 +135,40 @@ std::shared_ptr<Chain> Application::add_chain(const Json &request) {
     config = std::move(next);
     chains.push_back(chain);
     return chain;
+}
+void Application::close_chain(const std::shared_ptr<Chain> &chain) {
+    // Never hold registry/config locks while waiting for media threads to exit.
+    chain->stop();
+    std::lock_guard config_lock(config_mutex);
+    std::lock_guard list_lock(chains_mutex);
+    auto found = std::find(chains.begin(), chains.end(), chain);
+    if (found == chains.end()) return;
+    auto next = config;
+    // Do not reuse closed IDs/paths: queued requests and historical samples must
+    // never accidentally refer to a newly created chain with the same identity.
+    int next_index = next.value("next_chain_index", 1);
+    for (auto &j : next["chains"]) {
+        auto url = j.value("publish_url", "");
+        auto marker = url.rfind("/chain");
+        if (marker != std::string::npos) {
+            auto suffix = url.substr(marker + 6);
+            if (!suffix.empty() && suffix.size() < 8 &&
+                suffix.find_first_not_of("0123456789") == std::string::npos)
+                next_index = std::max(next_index, std::stoi(suffix) + 1);
+        }
+    }
+    next["next_chain_index"] = next_index;
+    auto &items = next["chains"];
+    for (auto it = items.begin(); it != items.end();)
+        if (it->at("id") == chain->cfg.id) it = items.erase(it); else ++it;
+    next["revision"] = config.value("revision", 1) + 1;
+    auto temp = config_file;
+    temp += ".tmp";
+    { std::ofstream file(temp); file << next.dump(2); if (!file) throw std::runtime_error("无法保存关闭页面配置，链路已停止"); }
+    std::filesystem::rename(temp, config_file);
+    config = std::move(next);
+    output->forget_chain(chain);
+    chains.erase(found);
 }
 void Application::event(std::string chain, std::string type, Json payload) {
     auto id = store->event(chain, type, payload);

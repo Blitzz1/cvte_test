@@ -1,6 +1,7 @@
 #include "playback/output.hpp"
 #include "media/chain.hpp"
 #include <audioclient.h>
+#include <map>
 #include <d2d1.h>
 #include <dwmapi.h>
 #include <mmdeviceapi.h>
@@ -18,7 +19,8 @@ struct Output::Impl {
     ComPtr<IWICBitmap> surface;
     ComPtr<ID2D1SolidColorBrush> black;
     std::vector<ComPtr<ID2D1Bitmap>> bitmaps;
-    std::atomic<int> selected_audio{-1};
+    std::atomic<std::shared_ptr<Chain>> selected_audio;
+    std::vector<std::shared_ptr<Chain>> layout_owners;
     std::thread audio_thread;
     std::atomic<bool> done{false};
     explicit Impl(Application &a) : app(a) {}
@@ -98,13 +100,17 @@ struct Output::Impl {
     };
     void audio_loop() {
         CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-        std::vector<std::unique_ptr<AudioDevice>> devices;
-        std::vector<int64_t> retry_at;
+        using Owner = std::shared_ptr<Chain>;
+        std::map<Owner, std::unique_ptr<AudioDevice>, std::owner_less<Owner>> devices;
+        std::map<Owner, int64_t, std::owner_less<Owner>> retry_at;
         while (!done && !app.quit) {
             auto chains = app.chains_copy();
-            devices.resize(chains.size());
-            retry_at.resize(chains.size(), 0);
-            for (size_t i = 0; i < devices.size(); ++i) {
+            auto removed = [&](const auto &entry) {
+                return std::find(chains.begin(), chains.end(), entry.first) == chains.end();
+            };
+            std::erase_if(devices, removed);
+            std::erase_if(retry_at, removed);
+            for (size_t i = 0; i < chains.size(); ++i) {
                 auto &chain = *chains[i];
                 uint64_t generation;
                 bool needed;
@@ -114,42 +120,42 @@ struct Output::Impl {
                     needed = chain.cfg.has_audio && !chain.stop_requested;
                 }
                 if (!needed) {
-                    devices[i].reset();
+                    devices[chains[i]].reset();
                     continue;
                 }
-                if (!devices[i]) {
-                    if (now_us() < retry_at[i])
+                if (!devices[chains[i]]) {
+                    if (now_us() < retry_at[chains[i]])
                         continue;
                     auto fresh = std::make_unique<AudioDevice>();
                     if (!fresh->init()) {
                         chain.audio_unavailable(generation, "audio_device_unavailable");
-                        retry_at[i] = now_us() + 1000000;
+                        retry_at[chains[i]] = now_us() + 1000000;
                         continue;
                     }
                     fresh->generation = generation;
-                    devices[i] = std::move(fresh);
+                    devices[chains[i]] = std::move(fresh);
                 }
-                auto &d = *devices[i];
+                auto &d = *devices[chains[i]];
                 // Device calls never hold the media mutex.
                 if (d.generation != generation) {
                     d.client->Stop();
                     if (FAILED(d.client->Reset())) {
                         chain.audio_unavailable(generation, "audio_reset_failed");
-                        devices[i].reset();
-                        retry_at[i] = now_us() + 1000000;
+                        devices[chains[i]].reset();
+                        retry_at[chains[i]] = now_us() + 1000000;
                         continue;
                     }
                     BYTE *initial{};
                     if (FAILED(d.render->GetBuffer(d.capacity, &initial))) {
                         chain.audio_unavailable(generation, "audio_reset_failed");
-                        devices[i].reset();
+                        devices[chains[i]].reset();
                         continue;
                     }
                     std::memset(initial, 0, size_t(d.capacity) * 8);
                     d.render->ReleaseBuffer(d.capacity, AUDCLNT_BUFFERFLAGS_SILENT);
                     if (FAILED(d.client->Start())) {
                         chain.audio_unavailable(generation, "audio_start_failed");
-                        devices[i].reset();
+                        devices[chains[i]].reset();
                         continue;
                     }
                     d.generation = generation;
@@ -160,15 +166,16 @@ struct Output::Impl {
                     d.last_position = 0;
                     d.last_position_us = 0;
                 }
-                if (d.volume && d.last_audio_selection != selected_audio) {
-                    d.volume->SetMasterVolume(selected_audio == int(i) ? 0.4f : 0.0f, nullptr);
-                    d.last_audio_selection = selected_audio;
+                int audible = selected_audio.load() == chains[i] ? 1 : 0;
+                if (d.volume && d.last_audio_selection != audible) {
+                    d.volume->SetMasterVolume(audible ? 0.4f : 0.0f, nullptr);
+                    d.last_audio_selection = audible;
                 }
                 UINT32 padding{};
                 if (FAILED(d.client->GetCurrentPadding(&padding)) || padding > d.capacity) {
                     chain.audio_unavailable(generation, "audio_device_error");
-                    devices[i].reset();
-                    retry_at[i] = now_us() + 1000000;
+                    devices[chains[i]].reset();
+                    retry_at[chains[i]] = now_us() + 1000000;
                     continue;
                 }
                 if (padding == 0) {
@@ -224,7 +231,7 @@ struct Output::Impl {
                         }
                         if (FAILED(d.render->ReleaseBuffer(available, 0))) {
                             chain.audio_unavailable(generation, "audio_device_error");
-                            devices[i].reset();
+                            devices[chains[i]].reset();
                             continue;
                         }
                         d.submitted += available;
@@ -241,8 +248,8 @@ struct Output::Impl {
                          now_us() - d.last_position_us > 100000) ||
                         d.segments.size() > 512) {
                         chain.audio_unavailable(generation, "audio_clock_discontinuous");
-                        devices[i].reset();
-                        retry_at[i] = now_us() + 1000000;
+                        devices[chains[i]].reset();
+                        retry_at[chains[i]] = now_us() + 1000000;
                         continue;
                     }
                     if (!d.last_position_us || position != d.last_position) {
@@ -286,7 +293,27 @@ Output::~Output() {
         p_->audio_thread.join();
 }
 void Output::select_audio(int i) {
-    p_->selected_audio = i;
+    std::lock_guard lock(p_->app.chains_mutex);
+    auto &chains = p_->app.chains;
+    p_->selected_audio.store(i >= 0 && size_t(i) < chains.size() && !chains[size_t(i)]->stop_requested
+                                ? chains[size_t(i)] : nullptr);
+}
+void Output::select_audio_chain(const std::string &id) {
+    std::lock_guard lock(p_->app.chains_mutex);
+    for (auto &chain : p_->app.chains)
+        if (chain->cfg.id == id && !chain->stop_requested) {
+            p_->selected_audio.store(chain);
+            return;
+        }
+    throw std::runtime_error("chain is not running");
+}
+std::string Output::selected_audio_id() const {
+    auto chain = p_->selected_audio.load();
+    return chain ? chain->cfg.id : "";
+}
+void Output::forget_chain(const std::shared_ptr<Chain> &chain) {
+    auto expected = chain;
+    p_->selected_audio.compare_exchange_strong(expected, nullptr);
 }
 void Output::run(int seconds) {
     auto &p = *p_;
@@ -341,7 +368,9 @@ void Output::run(int seconds) {
         if (p.app.quit)
             break;
         auto chains = p.app.chains_copy();
-        if (p.bitmaps.size() != chains.size()) {
+        if (p.layout_owners != chains) {
+            p.layout_owners = chains;
+            p.bitmaps.clear();
             p.bitmaps.resize(chains.size());
             p.renderer->BeginDraw();
             p.renderer->Clear(D2D1::ColorF(D2D1::ColorF::Black));

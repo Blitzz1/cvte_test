@@ -83,3 +83,5 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/stop.ps1
 解码未产出归因已细分：成功提交但超时无输出、输入缺失后未产出（关联证据）、独立UDP损伤后未产出；不将完整压缩单元丢弃称作网络丢包。RTMP／RTSP单路对比与审计见[修复记录](docs/解码未产出归因修复记录.md)。当前[设计文档](docs/设计文档.md)已按真实架构、模块、API和SQLite表重写，删除未落地候选的现行描述。
 
 从一条链路开始，再在页面新增并发检测：`powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/start.ps1 -Config config/single-chain.json -Seconds 300`。统一启动入口默认使用single-chain.json，首次一条链路，新增后保存并在下次恢复；旧app.json保留用户选择，可显式传-Config config/app.json启动旧配置。
+
+关闭页签可点其×或顶部“关闭页面”：停止该路推拉／检测并持久移除页签，历史保留；“停止”仅停链路保留页签。最后一页可关闭，空工作区仍可新增。资源与历史验证见[关闭页面记录](docs/关闭链路页面验收记录.md)。

@@ -1,0 +1,6 @@
+{
+  "session": "chain-3-1793244954067",
+  "audio_position_records": 884,
+  "backward_device_positions": [],
+  "scope": "Surviving device positions stayed monotonic across sibling removal; paired with actual selected chain identity and unchanged session/generation."
+}

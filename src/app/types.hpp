@@ -100,6 +100,7 @@ class Application {
     std::shared_ptr<Chain> find(const std::string &id);
     std::vector<std::shared_ptr<Chain>> chains_copy() const;
     std::shared_ptr<Chain> add_chain(const Json &request);
+    void close_chain(const std::shared_ptr<Chain> &chain);
     void event(std::string chain, std::string type, Json payload);
 };
 } // namespace avqm
