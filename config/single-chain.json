@@ -1,34 +1,68 @@
 {
   "chains": [
     {
-      "id": "chain-1",
-      "alias": "链路 1",
+      "alias": "链路 3",
       "enabled": true,
-      "protocol": "rtsp",
-      "transport": "tcp",
+      "has_audio": true,
+      "id": "chain-24",
+      "protocol": "rtmp",
+      "publish_url": "rtmp://127.0.0.1:1935/chain24",
+      "pull_url": "rtmp://127.0.0.1:1935/chain24",
       "source": "data/media/sample-3m.mp4",
-      "publish_url": "rtsp://127.0.0.1:8554/chain1",
-      "pull_url": "rtsp://127.0.0.1:8554/chain1",
-      "has_audio": true
+      "transport": "tcp"
+    },
+    {
+      "alias": "链路 2",
+      "enabled": true,
+      "has_audio": true,
+      "id": "chain-25",
+      "protocol": "rtsp",
+      "publish_url": "rtsp://127.0.0.1:8554/chain25",
+      "pull_url": "rtsp://127.0.0.1:8554/chain25",
+      "source": "data/media/sample-3m.mp4",
+      "transport": "tcp"
+    },
+    {
+      "alias": "链路 3",
+      "enabled": true,
+      "has_audio": true,
+      "id": "chain-26",
+      "protocol": "rtsp",
+      "publish_url": "rtsp://127.0.0.1:8554/chain26",
+      "pull_url": "rtsp://127.0.0.1:8555/chain26",
+      "source": "data/media/sample-3m.mp4",
+      "transport": "udp"
+    },
+    {
+      "alias": "链路 4",
+      "enabled": true,
+      "has_audio": true,
+      "id": "chain-27",
+      "protocol": "rtsp",
+      "publish_url": "rtsp://127.0.0.1:8554/chain27",
+      "pull_url": "rtsp://127.0.0.1:8555/chain27",
+      "source": "data/media/sample-3m.mp4",
+      "transport": "udp"
     }
   ],
+  "next_chain_index": 28,
   "port": 8080,
-  "revision": 1,
+  "revision": 50,
   "settings": {
-    "output_width": 320,
-    "output_height": 180,
-    "video_queue_frames": 96,
-    "video_queue_mib": 20,
-    "video_total_mib": 64,
     "decoder_threads": 1,
     "delay_critical_ms": 1000,
     "delay_warning_ms": 400,
     "hold_ms": 3000,
     "loss_critical_pct": 5,
     "loss_warning_pct": 1,
+    "output_height": 180,
+    "output_width": 320,
     "recovery_ms": 3000,
     "resolution_timeout_ms": 5000,
     "retention_days": 7,
+    "video_queue_frames": 96,
+    "video_queue_mib": 20,
+    "video_total_mib": 64,
     "webhook": "http://127.0.0.1:8080/webhook-demo"
   }
 }

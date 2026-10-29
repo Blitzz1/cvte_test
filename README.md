@@ -44,6 +44,15 @@ JPEG预览不是浏览器内30fps同步音视频播放器；音频监听来自�
 
 ## 开发、素材与数据
 
+在其他电脑拉取源码和提交历史：
+
+```powershell
+git clone https://github.com/Blitzz1/cvte_test.git
+cd cvte_test
+```
+
+仓库分支为master。Git仓库包含源码、文档、测试、脚本及配置；受.gitignore排除的third_party、runtime、web/vendor、data和本机构建／测试产物不随普通clone下载。仅拉取源码还不能直接启动：需按下文和依赖说明准备工具、依赖及素材，或恢复另行提供的完整运行材料。当前上传的single-chain.json保存了本机页面集合，不保证只有一路；正式固定负载仍用stability-four.json。本机证书私钥不进入仓库。
+
 ```powershell
 # 开发构建：已安装的MSVC 14.44、Windows SDK、CMake／Ninja
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/build.ps1
