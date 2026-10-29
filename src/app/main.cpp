@@ -68,15 +68,70 @@ Settings Application::settings_copy() {
 }
 Json Application::snapshot() {
     Json a = Json::array();
-    for (auto &c : chains)
+    for (auto &c : chains_copy())
         a.push_back(c->snapshot());
     return a;
 }
 std::shared_ptr<Chain> Application::find(const std::string &id) {
-    for (auto &c : chains)
+    for (auto &c : chains_copy())
         if (c->cfg.id == id)
             return c;
     return {};
+}
+std::vector<std::shared_ptr<Chain>> Application::chains_copy() const {
+    std::lock_guard lock(chains_mutex);
+    return chains;
+}
+std::shared_ptr<Chain> Application::add_chain(const Json &request) {
+    std::lock_guard config_lock(config_mutex);
+    std::lock_guard list_lock(chains_mutex);
+    if (chains.size() >= 8 || config["chains"].size() >= 8)
+        throw std::runtime_error("最多支持8条链路");
+    auto protocol = request.value("protocol", "rtsp");
+    auto transport = request.value("transport", "tcp");
+    if ((protocol != "rtsp" && protocol != "rtmp") ||
+        (protocol == "rtsp" && transport != "tcp" && transport != "udp"))
+        throw std::runtime_error("请选择RTSP TCP、RTSP UDP或RTMP");
+    auto source = request.value("source", "data/media/sample-3m.mp4");
+    auto source_path = std::filesystem::path(source);
+    if (!std::filesystem::is_regular_file(source_path.is_absolute() ? source_path : root / source_path))
+        throw std::runtime_error("素材文件不存在");
+    int index = 1;
+    for (;; ++index) {
+        auto id = "chain-" + std::to_string(index);
+        auto path = "/chain" + std::to_string(index);
+        bool used = false;
+        for (auto &j : config["chains"])
+            if (j.at("id") == id || j.value("publish_url", "").ends_with(path)) used = true;
+        if (!used) break;
+    }
+    ChainConfig c;
+    c.id = "chain-" + std::to_string(index);
+    c.alias = request.value("alias", "链路 " + std::to_string(index));
+    if (c.alias.empty() || c.alias.size() > 160) throw std::runtime_error("链路名称无效");
+    c.source = source;
+    c.protocol = protocol;
+    c.transport = transport;
+    c.has_audio = request.value("has_audio", true);
+    auto path = "/chain" + std::to_string(index);
+    c.publish_url = (protocol == "rtmp" ? "rtmp://127.0.0.1:1935" : "rtsp://127.0.0.1:8554") + path;
+    c.pull_url = protocol == "rtsp" && transport == "udp" ? "rtsp://127.0.0.1:8555" + path : c.publish_url;
+    auto chain = std::make_shared<Chain>(*this, c);
+    Json item = {{"id", c.id}, {"alias", c.alias}, {"enabled", true}, {"source", c.source},
+                 {"protocol", protocol}, {"transport", transport}, {"publish_url", c.publish_url},
+                 {"pull_url", c.pull_url}, {"has_audio", c.has_audio}};
+    auto next = config;
+    next["chains"].push_back(item);
+    next["revision"] = config.value("revision", 1) + 1;
+    auto temp = config_file;
+    temp += ".tmp";
+    { std::ofstream file(temp); file << next.dump(2); if (!file) throw std::runtime_error("无法保存配置"); }
+    // Reserve before persisting, so the append cannot fail after the file has been committed.
+    chains.reserve(8);
+    std::filesystem::rename(temp, config_file);
+    config = std::move(next);
+    chains.push_back(chain);
+    return chain;
 }
 void Application::event(std::string chain, std::string type, Json payload) {
     auto id = store->event(chain, type, payload);
@@ -114,14 +169,14 @@ int main(int argc, char **argv) {
         av_log_set_level(AV_LOG_WARNING);
         Application app(root, config_path);
         std::thread http([&] { run_http(app, app.config.value("port", 8080)); });
-        for (auto &c : app.chains)
+        for (auto &c : app.chains_copy())
             if (c->cfg.enabled)
                 c->start();
         std::thread metrics([&] {
             int64_t next_prune = 0;
             while (!app.quit) {
                 auto due = now_us() + 1000000;
-                for (auto &c : app.chains)
+                for (auto &c : app.chains_copy())
                     try {
                         c->tick();
                     } catch (const std::exception &e) {

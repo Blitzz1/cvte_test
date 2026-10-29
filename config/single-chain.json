@@ -1,0 +1,34 @@
+{
+  "chains": [
+    {
+      "id": "chain-1",
+      "alias": "链路 1",
+      "enabled": true,
+      "protocol": "rtsp",
+      "transport": "tcp",
+      "source": "data/media/sample-3m.mp4",
+      "publish_url": "rtsp://127.0.0.1:8554/chain1",
+      "pull_url": "rtsp://127.0.0.1:8554/chain1",
+      "has_audio": true
+    }
+  ],
+  "port": 8080,
+  "revision": 1,
+  "settings": {
+    "output_width": 320,
+    "output_height": 180,
+    "video_queue_frames": 96,
+    "video_queue_mib": 20,
+    "video_total_mib": 64,
+    "decoder_threads": 1,
+    "delay_critical_ms": 1000,
+    "delay_warning_ms": 400,
+    "hold_ms": 3000,
+    "loss_critical_pct": 5,
+    "loss_warning_pct": 1,
+    "recovery_ms": 3000,
+    "resolution_timeout_ms": 5000,
+    "retention_days": 7,
+    "webhook": "http://127.0.0.1:8080/webhook-demo"
+  }
+}

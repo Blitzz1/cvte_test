@@ -173,6 +173,8 @@ void Chain::reset_playback_locked(const std::string &reason) {
     sync_samples.clear();
     sync_step = {};
     latency_samples.clear();
+    transport_samples.clear();
+    pipeline_samples.clear();
     presentation_times.clear();
     freeze.reset();
     unmapped_outputs.clear();
@@ -222,6 +224,8 @@ void Chain::start() {
         audio_clock_observed_us = 0;
         last_audio_logged_us = 0;
         latency_samples.clear();
+        transport_samples.clear();
+        pipeline_samples.clear();
         presentation_times.clear();
         received_video_units = 0;
         receiver_connection = 0;
@@ -479,7 +483,7 @@ void Chain::publish() {
             wait_until(now_us() + 1000000, stop_requested);
     }
 }
-std::shared_ptr<SourceUnit> Chain::match(const std::string &sig, bool video, int64_t pts) {
+std::shared_ptr<SourceUnit> Chain::match(const std::string &sig, bool video, int64_t pts, int64_t received) {
     if (sig.empty())
         return {};
     auto it = signatures.find((video ? "v" : "a") + sig);
@@ -504,14 +508,14 @@ std::shared_ptr<SourceUnit> Chain::match(const std::string &sig, bool video, int
         u->received_media_us = pts;
     if (pts != INT64_MIN)
         offset = u->media_us - pts;
-    u->frame.receive_us = now_us();
+    u->frame.receive_us = received;
     if (video) {
         ++matched_video;
         last_video_match_us_ = now_us();
     }
     observe({{"stage", "received_matched"},
              {"id", u->id},
-             {"mono_us", now_us()},
+             {"mono_us", received},
              {"rx_media_us", pts},
              {"generation", playback_generation},
              {"video", video},
@@ -519,7 +523,7 @@ std::shared_ptr<SourceUnit> Chain::match(const std::string &sig, bool video, int
              {"source_media_us", u->media_us}});
     return u;
 }
-std::shared_ptr<SourceUnit> Chain::match_damaged_pts(int64_t pts) {
+std::shared_ptr<SourceUnit> Chain::match_damaged_pts(int64_t pts, int64_t received) {
     if (pts == INT64_MIN || !video_pts_offset_ || now_us() - last_video_match_us_ > 500000)
         return {};
     auto mapped = pts + *video_pts_offset_;
@@ -536,12 +540,12 @@ std::shared_ptr<SourceUnit> Chain::match_damaged_pts(int64_t pts) {
     if (found) {
         found->matched = true;
         found->received_media_us = pts;
-        found->frame.receive_us = now_us();
+        found->frame.receive_us = received;
         ++matched_video;
         ++timestamp_recovered;
         observe({{"stage", "received_matched"},
                  {"id", found->id},
-                 {"mono_us", now_us()},
+                 {"mono_us", received},
                  {"rx_media_us", pts},
                  {"source_media_us", found->media_us},
                  {"video", true},
@@ -632,6 +636,7 @@ void Chain::receive() {
             uint64_t input_loss_context = 0;
             int64_t input_loss_media = INT64_MIN;
             while (!stop_requested && (rc = av_read_frame(in, p)) >= 0) {
+                const auto packet_received = now_us();
                 auto idx = p->stream_index;
                 auto *s = in->streams[idx];
                 auto *codec = codecs[idx];
@@ -655,9 +660,15 @@ void Chain::receive() {
                         byte_samples.pop_front();
                     if (video)
                         ++received_video_units;
-                    unit = match(sig, video, pts);
+                    unit = match(sig, video, pts, packet_received);
                     if (!unit && video)
-                        unit = match_damaged_pts(pts);
+                        unit = match_damaged_pts(pts, packet_received);
+                    if (video && unit) {
+                        if (auto delay = measured_latency_ms(unit->source_us, packet_received))
+                            transport_samples.emplace_back(packet_received, *delay);
+                        while (!transport_samples.empty() && packet_received - transport_samples.front().first > 1000000)
+                            transport_samples.pop_front();
+                    }
                     f = fault;
                 }
                 // Complete-access-unit reception loss injection. It is NOT reported as network packet loss.
@@ -712,6 +723,7 @@ void Chain::receive() {
                 auto drain_decoder = [&]() -> int {
                     while (!stop_requested) {
                         auto decode_result = avcodec_receive_frame(codec, frame);
+                        const auto decoded_at = now_us();
                         if (decode_result < 0) {
                             if (video) {
                                 std::lock_guard lock(mutex);
@@ -744,7 +756,7 @@ void Chain::receive() {
                                     unmapped_outputs.pop_front();
                             }
                             if (u && u->frame.decode_generation == generation) {
-                                u->frame.decode_us = now_us();
+                                u->frame.decode_us = decoded_at;
                                 // A delayed decoder output supersedes a timeout conclusion.
                                 if (u->frame.outcome == Outcome::decode_no_output ||
                                     u->frame.outcome == Outcome::decode_after_input_loss ||
@@ -758,7 +770,7 @@ void Chain::receive() {
                                      {"frame_pts", frame->pts}, {"best_effort_pts", fpts},
                                      {"decode_error_flags", frame->decode_error_flags},
                                      {"frame_flags", frame->flags},
-                                     {"mono_us", now_us()}, {"generation", generation}});
+                                     {"mono_us", decoded_at}, {"generation", generation}});
                         }
                         int64_t media = 0, due = 0;
                         {
@@ -802,8 +814,7 @@ void Chain::receive() {
                                 width = frame->width;
                                 height = frame->height;
                                 ++decoded;
-                                if (u)
-                                    u->frame.decode_us = now_us();
+
                             }
                         }
                         if (video) {
@@ -921,7 +932,9 @@ void Chain::receive() {
                     }
                     return 0;
                 };
+                auto decode_started_at = now_us();
                 rc = avcodec_send_packet(codec, p);
+                auto submitted_at = now_us();
                 if (rc == AVERROR(EAGAIN)) {
                     // FFmpeg requires draining and retrying the SAME packet, not discarding it.
                     if (video) {
@@ -930,14 +943,17 @@ void Chain::receive() {
                                  {"generation", generation}, {"mono_us", now_us()}});
                     }
                     drain_decoder();
+                    decode_started_at = now_us();
                     rc = avcodec_send_packet(codec, p);
+                    submitted_at = now_us();
                     if (rc == AVERROR(EAGAIN))
                         throw std::runtime_error("decoder remained blocked after draining");
                 }
                 if (video) {
                     std::lock_guard lock(mutex);
                     if (unit && rc == 0) {
-                        unit->frame.decode_submitted_us = now_us();
+                        unit->frame.decode_submitted_us = submitted_at;
+                        unit->frame.decode_started_us = decode_started_at;
                         unit->frame.decode_generation = generation;
                         // Key access units begin a new recovery boundary. This is context,
                         // not proof that any specific reference picture was required.
@@ -945,8 +961,9 @@ void Chain::receive() {
                             (packet_flags & AV_PKT_FLAG_KEY) ? 0 : input_loss_context;
                     }
                     observe({{"stage", "decode_submission"}, {"id", unit ? unit->id : 0},
+                             {"call_started_us", decode_started_at},
                              {"packet_pts", packet_pts}, {"packet_flags", packet_flags},
-                             {"packet_size", packet_size}, {"result", rc}, {"mono_us", now_us()},
+                             {"packet_size", packet_size}, {"result", rc}, {"mono_us", submitted_at},
                              {"generation", generation}});
                 }
                 av_packet_unref(p);
@@ -1054,6 +1071,16 @@ void Chain::did_present(uint64_t id, int64_t media, int64_t source_time, int64_t
         if (auto u = found->second.lock()) {
             u->frame.outcome = Outcome::presented;
             u->frame.present_us = observed;
+            if (auto times = measured_pipeline_times(u->frame)) {
+                pipeline_samples.emplace_back(observed, *times);
+                observe({{"stage", "pipeline_timing"}, {"id", u->id}, {"generation", generation},
+                         {"source_us", u->source_us}, {"received_us", *u->frame.receive_us},
+                         {"decode_started_us", *u->frame.decode_started_us},
+                         {"submitted_us", *u->frame.decode_submitted_us}, {"decoded_us", *u->frame.decode_us},
+                         {"presented_us", observed}, {"mono_us", observed}});
+            }
+            while (!pipeline_samples.empty() && observed - pipeline_samples.front().first > 1000000)
+                pipeline_samples.pop_front();
         }
     output_validity = "software_render_complete";
     state = "running";
@@ -1171,6 +1198,26 @@ Json Chain::snapshot() {
                                                                                            : "active")
                                                    : state;
     auto evidence = app.journal->stats(session);
+    std::optional<double> transport_mean;
+    size_t transport_count = 0, stage_count = 0;
+    double transport_sum = 0;
+    PipelineTimes stage_sum{};
+    for (auto &[time, value] : transport_samples)
+        if (time <= now && now - time <= 1000000) { transport_sum += value; ++transport_count; }
+    if (transport_count) transport_mean = transport_sum / transport_count;
+    for (auto &[time, value] : pipeline_samples)
+        if (time <= now && now - time <= 1000000) {
+            stage_sum.transport_ms += value.transport_ms;
+            stage_sum.receive_to_submit_ms += value.receive_to_submit_ms;
+            stage_sum.decoder_ms += value.decoder_ms;
+            stage_sum.submit_call_ms += value.submit_call_ms;
+            stage_sum.decode_ms += value.decode_ms;
+            stage_sum.post_decode_ms += value.post_decode_ms;
+            stage_sum.receiver_processing_ms += value.receiver_processing_ms;
+            stage_sum.total_ms += value.total_ms;
+            ++stage_count;
+        }
+    auto stage_value = [&](double value) -> Json { return stage_count ? Json(value / stage_count) : Json(nullptr); };
     auto current_latency_count = std::count_if(latency_samples.begin(), latency_samples.end(), [&](auto &s) {
         return s.first <= now && now - s.first <= 1000000;
     });
@@ -1236,6 +1283,18 @@ Json Chain::snapshot() {
              : Json(nullptr)},
         {"association_coverage_pct", received_video_units ? 100.0 * matched_video / received_video_units : 0},
         {"source_delivery_match_pct", sent ? 100.0 * matched_video / sent : 0},
+        {"transport_ms", transport_mean ? Json(*transport_mean) : Json(nullptr)},
+        {"transport_sample_count", transport_count},
+        {"transport_validity", transport_count ? "valid" : "no_recent_matched_packet"},
+        {"receive_to_submit_ms", stage_value(stage_sum.receive_to_submit_ms)},
+        {"decoder_ms", stage_value(stage_sum.decoder_ms)},
+        {"submit_call_ms", stage_value(stage_sum.submit_call_ms)},
+        {"decode_ms", stage_value(stage_sum.decode_ms)},
+        {"post_decode_ms", stage_value(stage_sum.post_decode_ms)},
+        {"receiver_processing_ms", stage_value(stage_sum.receiver_processing_ms)},
+        {"pipeline_transport_ms", stage_value(stage_sum.transport_ms)},
+        {"pipeline_total_ms", stage_value(stage_sum.total_ms)},
+        {"pipeline_sample_count", stage_count},
         {"latency_ms", latency_mean ? Json(*latency_mean) : Json(nullptr)},
         {"latency_max_ms", latency_max ? Json(*latency_max) : Json(nullptr)},
         {"latency_sample_count", current_latency_count},

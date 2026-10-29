@@ -1,0 +1,21 @@
+{
+  "live": {
+    "cards": 1,
+    "connection": "● 已连接",
+    "imageWidth": 500,
+    "monitorStatus": "实际输出帧 12082 · 播放批次 4 · 画面来自已完成的WIC绘制",
+    "monitorVisible": true,
+    "mosaic": 0,
+    "selected": "浏览器新增RTMP",
+    "tabs": 2,
+    "videoPaused": false,
+    "videoVisible": true,
+    "videoWidth": 1920
+  },
+  "switched": {
+    "cards": 1,
+    "monitorHidden": true,
+    "originalHidden": true,
+    "selected": "RTSP TCP · 链路2"
+  }
+}

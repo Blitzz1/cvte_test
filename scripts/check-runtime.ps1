@@ -1,4 +1,4 @@
-param([string]$Config='config/app.json',[string]$OutputPath='artifacts/runtime-check.json')
+param([string]$Config='config/single-chain.json',[string]$OutputPath='artifacts/runtime-check.json')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot
 Set-Location $root

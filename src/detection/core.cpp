@@ -147,6 +147,21 @@ Outcome resolve_missing(const FrameRecord &f, Microseconds now, Microseconds tim
     }
     return f.damaged ? Outcome::transport_lost : Outcome::unknown_missing;
 }
+std::optional<PipelineTimes> measured_pipeline_times(const FrameRecord &f) {
+    if (!f.receive_us || !f.decode_started_us || !f.decode_submitted_us || !f.decode_us || !f.present_us ||
+        f.source_us > *f.receive_us || *f.receive_us > *f.decode_started_us ||
+        *f.decode_started_us > *f.decode_submitted_us ||
+        *f.decode_submitted_us > *f.decode_us || *f.decode_us > *f.present_us)
+        return {};
+    return PipelineTimes{(*f.receive_us - f.source_us) / 1000.0,
+                         (*f.decode_started_us - *f.receive_us) / 1000.0,
+                         (*f.decode_us - *f.decode_started_us) / 1000.0,
+                         (*f.decode_us - *f.receive_us) / 1000.0,
+                         (*f.present_us - *f.decode_us) / 1000.0,
+                         (*f.present_us - *f.receive_us) / 1000.0,
+                         (*f.present_us - f.source_us) / 1000.0,
+                         (*f.decode_submitted_us - *f.decode_started_us) / 1000.0};
+}
 LossWindow summarize_loss(const std::vector<FrameRecord> &f) {
     LossWindow w;
     size_t run = 0;

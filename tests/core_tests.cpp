@@ -12,6 +12,26 @@ void check(bool v, const char *name) {
 }
 int main() {
     try {
+        FrameRecord pipeline;
+        pipeline.source_us = 1000000;
+        pipeline.receive_us = 1100000;
+        pipeline.decode_started_us = 1101000;
+        pipeline.decode_submitted_us = 1102000;
+        pipeline.decode_us = 1120000;
+        pipeline.present_us = 1300000;
+        auto times = measured_pipeline_times(pipeline);
+        check(times && times->transport_ms == 100 && times->receive_to_submit_ms == 1 &&
+                  times->decoder_ms == 19 && times->submit_call_ms == 1 && times->decode_ms == 20 && times->post_decode_ms == 180 &&
+                  times->receiver_processing_ms == 200 && times->total_ms == 300,
+              "real pipeline boundaries form exact same-frame additive timing");
+        pipeline.present_us = 2100000;
+        auto delayed = measured_pipeline_times(pipeline);
+        check(delayed && delayed->transport_ms == times->transport_ms && delayed->post_decode_ms == 980,
+              "presentation delay never changes transport measurement");
+        pipeline.decode_us.reset();
+        check(!measured_pipeline_times(pipeline), "missing stage timestamps are not inferred");
+        pipeline.decode_us = 1099000;
+        check(!measured_pipeline_times(pipeline), "non-monotonic evidence is not published");
         FrameRecord waiting;
         waiting.source_us = 0;
         waiting.decode_submitted_us = 100000;

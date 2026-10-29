@@ -281,7 +281,8 @@ struct RtspRelay::Impl {
                 if (request.empty())
                     break;
                 if (!chain) {
-                    for (auto &c : app.chains) {
+                    for (auto &c : app.chains_copy()) {
+                        std::lock_guard chain_lock(c->mutex);
                         auto split = c->cfg.publish_url.find('/', 7);
                         if (split == std::string::npos)
                             continue;

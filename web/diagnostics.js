@@ -63,6 +63,16 @@
     const outcomes = Object.entries(c.loss_reasons || {}).map(([key, count]) =>
       `${reasons[key] || `未识别结局（${key}）`}：${number(count)}帧`).join('；') || '窗口尚无结局记录';
     return [
+      ['实测延迟分段', '传输延迟（卡片口径）', `${number(c.transport_ms, 2)} ms`, '源端实时释放→接收线程取得完整压缩包；近1秒全部已匹配视频包均值，包含推送、服务器和接收等待，不是纯网线耗时。'],
+      ['', '完整端到端延迟', `${number(c.latency_ms, 2)} ms`, '保留原口径：源端实时释放→WIC像素完成；现有延迟告警仍按此值判断。'],
+      ['', '接收→送入解码前', `${number(c.receive_to_submit_ms, 2)} ms`, '完整包取得→送入解码函数调用前，包括身份匹配等实际处理。'],
+      ['', '解码阶段耗时', `${number(c.decoder_ms, 2)} ms`, '送入调用前→对应画面产出；包含send_packet中的同步解码、后续取帧和重排序等待，不是纯CPU执行时间。'],
+      ['', '其中送入调用耗时', `${number(c.submit_call_ms, 2)} ms`, 'send_packet调用前→成功返回，是解码阶段的子集，不重复相加。'],
+      ['', '接收→解码完成', `${number(c.decode_ms, 2)} ms`, '前两段之和，均来自同一帧真实事件。'],
+      ['', '解码完成→呈现', `${number(c.post_decode_ms, 2)} ms`, '包含像素转换、调度排队和实际WIC绘制，含主动注入的视频延后。'],
+      ['', '接收端总处理耗时', `${number(c.receiver_processing_ms, 2)} ms`, '完整包取得→WIC完成；不计入卡片传输延迟。'],
+      ['', '同组样本分段核对', `${number(c.pipeline_transport_ms, 2)} + ${number(c.receiver_processing_ms, 2)} = ${number(c.pipeline_total_ms, 2)} ms`, '近1秒同时具有接收／提交／解码／呈现证据的同组样本；与卡片全部接收样本的均值可能不同。'],
+      ['', '传输 / 完整分段样本数', `${number(c.transport_sample_count)} / ${number(c.pipeline_sample_count)}`, '缺少真实观测时显示空值，不从平均数相减推测；旧历史记录没有新字段。'],
       ['链路与当前输出', '本路连接状态', status(c.connection_state || c.state), '仅描述本路连接；不表示三类质量指标都正常。'],
       ['', '本次运行标识', c.session || '尚未启动', '每次重新启动本路都会创建新标识，便于区分历史数据。'],
       ['', '本路接收连接次数', number(c.receiver_connection), '本次运行中拉流连接建立的次数；重连时增加。'],

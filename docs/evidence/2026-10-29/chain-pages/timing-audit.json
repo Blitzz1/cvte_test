@@ -1,0 +1,9 @@
+{
+  "same_frame_pipeline_records": {
+    "rtsp-tcp": 2469,
+    "chain-1": 735,
+    "chain-3": 1065
+  },
+  "errors": [],
+  "scope": "All six times independently matched to raw observation facts, including the decoder call start; source-to-receive is measured directly, not inferred by subtracting unrelated window means."
+}

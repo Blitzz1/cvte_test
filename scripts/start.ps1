@@ -1,4 +1,4 @@
-param([int]$Seconds=0,[switch]$NoBrowser,[string]$Config='config/app.json')
+param([int]$Seconds=0,[switch]$NoBrowser,[string]$Config='config/single-chain.json')
 $ErrorActionPreference='Stop'
 $root=Split-Path $PSScriptRoot
 Set-Location $root

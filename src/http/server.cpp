@@ -60,6 +60,11 @@ void run_http(Application &app, int port) {
                       {"implementation", "C++ / FFmpeg / native software output"}});
     });
     server.Get("/api/v1/chains", [&](const auto &, auto &res) { respond(res, app.snapshot()); });
+    server.Post("/api/v1/chains", [&](const auto &req, auto &res) {
+        auto c = app.add_chain(Json::parse(req.body));
+        auto command = app.services->command(c->cfg.id, "start");
+        respond(res, {{"id", c->cfg.id}, {"command_id", command}, {"state", "queued"}}, 202);
+    });
     server.Get(R"(/api/v1/chains/([A-Za-z0-9_-]+)/preview.jpg)", [&](const auto &req, auto &res) {
         auto chain = app.find(req.matches[1]);
         if (!chain) { respond(res, {{"error", "chain not found"}}, 404); return; }

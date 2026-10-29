@@ -44,6 +44,8 @@ class Chain {
     int64_t audio_clock_observed_us = 0;
     std::string output_validity = "warming_up", audio_validity = "warming_up";
     std::deque<std::pair<int64_t, double>> latency_samples;
+    std::deque<std::pair<int64_t, double>> transport_samples;
+    std::deque<std::pair<int64_t, PipelineTimes>> pipeline_samples;
     std::deque<int64_t> presentation_times;
     uint64_t received_video_units = 0;
     uint64_t receiver_connection = 0;
@@ -82,10 +84,10 @@ class Chain {
     std::thread publisher_, receiver_;
     void publish();
     void receive();
-    std::shared_ptr<SourceUnit> match(const std::string &signature, bool video, int64_t pts);
+    std::shared_ptr<SourceUnit> match(const std::string &signature, bool video, int64_t pts, int64_t received);
     std::optional<int64_t> video_pts_offset_, audio_pts_offset_;
     int64_t last_video_match_us_ = 0;
-    std::shared_ptr<SourceUnit> match_damaged_pts(int64_t pts);
+    std::shared_ptr<SourceUnit> match_damaged_pts(int64_t pts, int64_t received);
     void observe(const Json &j);
 };
 } // namespace avqm

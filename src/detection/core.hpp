@@ -104,11 +104,17 @@ struct FrameRecord {
     std::optional<Microseconds> receive_us, decode_us, present_us;
     bool damaged{};
     std::optional<Microseconds> decode_submitted_us;
+    std::optional<Microseconds> decode_started_us;
     uint64_t decode_generation{}, preceding_input_loss_id{};
 };
 // Stage attribution from observations, never from configured injection probability.
 Outcome resolve_missing(const FrameRecord &frame, Microseconds now, Microseconds timeout,
                         uint64_t generation, bool ambiguous_output);
+struct PipelineTimes {
+    double transport_ms{}, receive_to_submit_ms{}, decoder_ms{}, decode_ms{}, post_decode_ms{},
+           receiver_processing_ms{}, total_ms{}, submit_call_ms{};
+};
+std::optional<PipelineTimes> measured_pipeline_times(const FrameRecord &frame);
 struct LossWindow {
     size_t expected{}, pending{}, missing{}, consecutive_max{};
     std::map<std::string, size_t> reasons;

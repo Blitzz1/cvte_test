@@ -98,11 +98,14 @@ struct Output::Impl {
     };
     void audio_loop() {
         CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-        std::vector<std::unique_ptr<AudioDevice>> devices(app.chains.size());
-        std::vector<int64_t> retry_at(app.chains.size(), 0);
+        std::vector<std::unique_ptr<AudioDevice>> devices;
+        std::vector<int64_t> retry_at;
         while (!done && !app.quit) {
+            auto chains = app.chains_copy();
+            devices.resize(chains.size());
+            retry_at.resize(chains.size(), 0);
             for (size_t i = 0; i < devices.size(); ++i) {
-                auto &chain = *app.chains[i];
+                auto &chain = *chains[i];
                 uint64_t generation;
                 bool needed;
                 {
@@ -304,7 +307,7 @@ void Output::run(int seconds) {
         ShowWindow(p.window, SW_SHOWNOACTIVATE);
         ShowWindow(p.window, SW_SHOWNOACTIVATE);
     }
-    p.bitmaps.resize(p.app.chains.size());
+    p.bitmaps.resize(p.app.chains_copy().size());
     if (FAILED(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, p.factory.GetAddressOf())))
         throw std::runtime_error("Direct2D factory creation failed");
     if (FAILED(
@@ -337,11 +340,19 @@ void Output::run(int seconds) {
             p.app.quit = true;
         if (p.app.quit)
             break;
+        auto chains = p.app.chains_copy();
+        if (p.bitmaps.size() != chains.size()) {
+            p.bitmaps.resize(chains.size());
+            p.renderer->BeginDraw();
+            p.renderer->Clear(D2D1::ColorF(D2D1::ColorF::Black));
+            p.renderer->EndDraw();
+            for (auto &chain : chains) chain->preview.clear();
+        }
         bool changed = false;
         std::vector<std::pair<size_t, VideoImage>> updates;
         auto current = now_us();
-        for (size_t i = 0; i < p.app.chains.size(); ++i) {
-            auto &c = *p.app.chains[i];
+        for (size_t i = 0; i < chains.size(); ++i) {
+            auto &c = *chains[i];
             std::unique_lock lock(c.mutex, std::try_to_lock);
             if (!lock.owns_lock()) {
                 ++c.output_lock_skips;
@@ -365,10 +376,10 @@ void Output::run(int seconds) {
         }
         if (changed) {
             auto render_start = now_us();
-            std::vector<bool> painted(p.app.chains.size(), false);
+            std::vector<bool> painted(chains.size(), false);
             p.renderer->BeginDraw();
-            int cols = p.app.chains.size() > 4 ? 4 : 2;
-            int rows = int((p.app.chains.size() + cols - 1) / cols);
+            int cols = chains.size() > 4 ? 4 : 2;
+            int rows = int((chains.size() + cols - 1) / cols);
             int w = 1000 / cols, h = 600 / std::max(1, rows);
             for (auto &[i, v] : updates) {
                 if (!p.bitmaps[i] || p.bitmaps[i]->GetPixelSize().width != UINT32(v.width) ||
@@ -390,7 +401,7 @@ void Output::run(int seconds) {
                         D2D1::RectF(x + (w - rw) / 2, y + (h - rh) / 2, x + (w + rw) / 2, y + (h + rh) / 2));
                     painted[i] = true;
                 } else
-                    p.app.chains[i]->did_drop(v.frame_id, "output_bitmap_failed", v.generation);
+                    chains[i]->did_drop(v.frame_id, "output_bitmap_failed", v.generation);
             }
             auto result = p.renderer->EndDraw();
             // Locking the WIC-backed software target confirms actual rendered pixels are available.
@@ -403,16 +414,16 @@ void Output::run(int seconds) {
                 if (!painted[i])
                     continue;
                 if (SUCCEEDED(result))
-                    p.app.chains[i]->did_present(v.frame_id, v.media_us, v.source_us, observed, v.generation,
+                    chains[i]->did_present(v.frame_id, v.media_us, v.source_us, observed, v.generation,
                                                  (observed - render_start) / 1000.0);
                 else
-                    p.app.chains[i]->did_drop(v.frame_id, "output_backend_failed", v.generation);
-                if (SUCCEEDED(result) && p.app.chains[i]->preview.wanted(observed)) {
+                    chains[i]->did_drop(v.frame_id, "output_backend_failed", v.generation);
+                if (SUCCEEDED(result) && chains[i]->preview.wanted(observed)) {
                     UINT bytes{}, stride{};
                     BYTE *data{};
                     if (SUCCEEDED(pixels->GetStride(&stride)) &&
                         SUCCEEDED(pixels->GetDataPointer(&bytes, &data)) && bytes >= stride * 600) {
-                        auto &chain = *p.app.chains[i];
+                        auto &chain = *chains[i];
                         std::lock_guard lock(chain.mutex);
                         if (!chain.stop_requested && chain.playback_generation == v.generation)
                             chain.preview.capture(data + (i / cols * h) * stride + (i % cols * w) * 4,
