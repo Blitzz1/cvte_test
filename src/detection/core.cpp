@@ -112,6 +112,12 @@ const char *outcome_name(Outcome v) {
         return "transport_lost";
     case Outcome::decode_failed:
         return "decode_failed";
+    case Outcome::decode_no_output:
+        return "decode_no_output";
+    case Outcome::decode_after_input_loss:
+        return "decode_after_input_loss";
+    case Outcome::damaged_decode_no_output:
+        return "damaged_decode_no_output";
     case Outcome::receiver_discarded:
         return "receiver_discarded";
     case Outcome::presentation_dropped:
@@ -119,6 +125,27 @@ const char *outcome_name(Outcome v) {
     default:
         return "unknown_missing";
     }
+}
+Outcome resolve_missing(const FrameRecord &f, Microseconds now, Microseconds timeout,
+                        uint64_t generation, bool ambiguous_output) {
+    if (f.outcome != Outcome::pending || now - f.source_us <= timeout)
+        return f.outcome;
+    // A late-arriving input gets its full decoder wait, even if other output is unmapped.
+    if (f.decode_submitted_us && f.decode_generation == generation &&
+        (now - *f.decode_submitted_us <= timeout || f.decode_us))
+        return Outcome::pending;
+    // Unassociated output could be this frame; do not claim confirmed decoder loss.
+    if (ambiguous_output)
+        return Outcome::unknown_missing;
+    if (f.decode_submitted_us && now - *f.decode_submitted_us > timeout &&
+        f.decode_generation == generation && !f.decode_us) {
+        if (f.damaged)
+            return Outcome::damaged_decode_no_output;
+        if (f.preceding_input_loss_id)
+            return Outcome::decode_after_input_loss;
+        return Outcome::decode_no_output;
+    }
+    return f.damaged ? Outcome::transport_lost : Outcome::unknown_missing;
 }
 LossWindow summarize_loss(const std::vector<FrameRecord> &f) {
     LossWindow w;

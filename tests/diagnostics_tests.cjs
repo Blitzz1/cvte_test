@@ -22,6 +22,12 @@ assert.match(droppedRows.find(r => r[1] === '窗口内各类帧的结局')[2], /
 assert.match(droppedRows.find(r => r[1].includes('RTP丢包率'))[2], /不适用/);
 assert.match(d.activeFaults(dropped), /呈现丢帧 100.0%/);
 const unknown = d.rows({...tcp, loss_unknown: 4, loss_pct: 2, loss_confirmed_pct: 0});
+const decoderRows = d.rows({...tcp, loss_reasons: {decode_after_input_loss: 7,
+  damaged_decode_no_output: 2, decode_no_output: 1}});
+const decoderText = decoderRows.find(r => r[1] === '窗口内各类帧的结局')[2];
+assert.match(decoderText, /输入缺失后解码未产出（关联证据）：7帧/);
+assert.match(decoderText, /传输损伤后解码未产出：2帧/);
+assert.match(decoderText, /已提交解码但超时未产出画面：1帧/);
 assert.equal(unknown.find(r => r[1].startsWith('视频丢帧率'))[2], '0.00% ～ 2.00%');
 assert.equal(d.rows({...tcp, drift_ms_per_s: null}).find(r => r[1] === '音画偏差变化速度')[2], '— ms/s');
 // Exercise the real renderer with the actual helper and a minimal DOM; never sends control requests.

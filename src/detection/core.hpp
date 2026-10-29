@@ -89,6 +89,9 @@ enum class Outcome {
     send_failed,
     transport_lost,
     decode_failed,
+    decode_no_output,
+    decode_after_input_loss,
+    damaged_decode_no_output,
     receiver_discarded,
     presentation_dropped,
     unknown_missing
@@ -100,7 +103,12 @@ struct FrameRecord {
     Outcome outcome{Outcome::pending};
     std::optional<Microseconds> receive_us, decode_us, present_us;
     bool damaged{};
+    std::optional<Microseconds> decode_submitted_us;
+    uint64_t decode_generation{}, preceding_input_loss_id{};
 };
+// Stage attribution from observations, never from configured injection probability.
+Outcome resolve_missing(const FrameRecord &frame, Microseconds now, Microseconds timeout,
+                        uint64_t generation, bool ambiguous_output);
 struct LossWindow {
     size_t expected{}, pending{}, missing{}, consecutive_max{};
     std::map<std::string, size_t> reasons;

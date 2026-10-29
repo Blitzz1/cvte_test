@@ -1,0 +1,7 @@
+{
+  "sha256": "F993ECF241528F5AFA9ECA1F36ACEAC8D41229C0389DC9DB202FCB3B2C71EF22",
+  "tested_sha256": [
+    "01793EA5C6565396C8E609F019FC26BA2B26DF5ED99AB3F8FD6EE3E13318E80C"
+  ],
+  "post_media_test_change": "Mutex protection for transport damage metadata and full submission-relative wait for late input even with unmapped output; rebuilt, CTest 4/4 and Node tests passed; media matrix not repeated after these guard adjustments."
+}

@@ -12,6 +12,37 @@ void check(bool v, const char *name) {
 }
 int main() {
     try {
+        FrameRecord waiting;
+        waiting.source_us = 0;
+        waiting.decode_submitted_us = 100000;
+        waiting.decode_generation = 4;
+        check(resolve_missing(waiting, 200000, 5000000, 4, false) == Outcome::pending,
+              "normal decoder delay is not loss");
+        auto late_input = waiting;
+        late_input.decode_submitted_us = 5900000;
+        check(resolve_missing(late_input, 6000000, 5000000, 4, true) == Outcome::pending,
+              "late input waits from submission even with unrelated unmapped output");
+        check(resolve_missing(waiting, 6000000, 5000000, 4, false) == Outcome::decode_no_output,
+              "accepted input timeout is attributed to decoder stage");
+        waiting.preceding_input_loss_id = 22;
+        check(resolve_missing(waiting, 6000000, 5000000, 4, false) == Outcome::decode_after_input_loss,
+              "observed input loss context is retained without claiming exact reference dependency");
+        waiting.damaged = true;
+        check(resolve_missing(waiting, 6000000, 5000000, 4, false) == Outcome::damaged_decode_no_output,
+              "observed transport damage has a separate decode outcome");
+        check(resolve_missing(waiting, 6000000, 5000000, 4, true) == Outcome::unknown_missing,
+              "unmapped output prevents confirmed decoder attribution");
+        check(resolve_missing(waiting, 6000000, 5000000, 5, false) == Outcome::transport_lost,
+              "old generation is never called current decoder timeout");
+        waiting.damaged = false;
+        check(resolve_missing(waiting, 6000000, 5000000, 5, false) == Outcome::unknown_missing,
+              "reconnection without damage remains uncertain");
+        waiting.decode_us = 200000;
+        check(resolve_missing(waiting, 6000000, 5000000, 4, false) == Outcome::pending,
+              "decoded output awaiting presentation is not decoder loss");
+        waiting.outcome = Outcome::receiver_discarded;
+        check(resolve_missing(waiting, 6000000, 5000000, 4, false) == Outcome::receiver_discarded,
+              "direct discard remains mutually exclusive");
         check(measured_latency_ms(1000000, 1300000) == 300, "latency units");
         check(!measured_latency_ms(100, 99), "negative latency rejected");
         auto budget = std::make_shared<ByteBudget>(1024);

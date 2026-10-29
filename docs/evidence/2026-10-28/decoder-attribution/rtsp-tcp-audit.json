@@ -1,0 +1,11 @@
+{
+  "session": "rtsp-tcp-1793186208981",
+  "timeout_outcomes": {
+    "decode_after_input_loss": 128
+  },
+  "decoder_receive_states": {
+    "needs_input": 2979
+  },
+  "errors": [],
+  "scope": "Successful submission, configured 5-second wait, no earlier matched decode output and actual preceding loss observations. Does not prove exact H.264 reference dependencies; injection truth is not read."
+}
