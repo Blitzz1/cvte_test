@@ -1,4 +1,6 @@
 #pragma once
+#include <algorithm>
+#include <cmath>
 #include <atomic>
 #include <cstdint>
 #include <memory>
@@ -6,6 +8,15 @@
 #include <string>
 #include <vector>
 namespace avqm {
+struct PreviewRect { int x{}, y{}, width{}, height{}; };
+// Share the exact integer WIC drawing rectangle with the pixel mirror.
+inline PreviewRect preview_content_rect(int x, int y, int width, int height, int video_width, int video_height) {
+    if (width <= 0 || height <= 0 || video_width <= 0 || video_height <= 0) return {};
+    const double scale = std::min(double(width) / video_width, double(height) / video_height);
+    const int w = std::clamp(int(std::lround(video_width * scale)), 1, width);
+    const int h = std::clamp(int(std::lround(video_height * scale)), 1, height);
+    return {x + (width - w) / 2, y + (height - h) / 2, w, h};
+}
 struct PreviewFrame {
     int width{}, height{};
     uint64_t sequence{}, frame_id{}, generation{};

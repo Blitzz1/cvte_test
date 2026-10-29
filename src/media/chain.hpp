@@ -46,6 +46,10 @@ class Chain {
     std::deque<std::pair<int64_t, double>> latency_samples;
     std::deque<std::pair<int64_t, double>> transport_samples;
     std::deque<std::pair<int64_t, PipelineTimes>> pipeline_samples;
+    struct AssociationTiming {
+        int64_t received{}, hash_started{}, hash_done{}, lock_requested{}, lock_acquired{}, match_started{}, matched{};
+    };
+    std::deque<AssociationTiming> association_samples;
     std::deque<int64_t> presentation_times;
     uint64_t received_video_units = 0;
     uint64_t receiver_connection = 0;
@@ -77,7 +81,7 @@ class Chain {
     void audio_unavailable(uint64_t generation, const std::string &reason);
     void audio_progress(const AudioClockSample &sample);
     void rtp_frame_observed(const std::vector<uint8_t> &access_unit, size_t before, size_t after,
-                            uint32_t timestamp);
+                            uint32_t timestamp, int64_t last_packet_us, bool marker_seen);
     void injection_truth(const Json &value);
 
   private:

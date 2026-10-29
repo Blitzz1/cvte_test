@@ -1,0 +1,192 @@
+{
+  "chains": {
+    "rtsp-udp": {
+      "session": "rtsp-udp-1793248438683",
+      "audited_associations": 2693,
+      "stages": {
+        "transport": {
+          "count": 2245,
+          "mean_ms": 45.43780178173719,
+          "median_ms": 46.757,
+          "p95_ms": 60.438
+        },
+        "hash": {
+          "count": 2245,
+          "mean_ms": 0.09370155902004454,
+          "median_ms": 0.071,
+          "p95_ms": 0.193
+        },
+        "lock_wait": {
+          "count": 2245,
+          "mean_ms": 0.00030601336302895325,
+          "median_ms": 0.0,
+          "p95_ms": 0.001
+        },
+        "match": {
+          "count": 2245,
+          "mean_ms": 0.02944944320712695,
+          "median_ms": 0.023,
+          "p95_ms": 0.058
+        },
+        "association": {
+          "count": 2245,
+          "mean_ms": 0.12446280623608018,
+          "median_ms": 0.096,
+          "p95_ms": 0.247
+        },
+        "source_to_write": {
+          "count": 2245,
+          "mean_ms": 0.04586904231625835,
+          "median_ms": 0.033,
+          "p95_ms": 0.111
+        },
+        "write_call": {
+          "count": 2245,
+          "mean_ms": 0.20874743875278395,
+          "median_ms": 0.175,
+          "p95_ms": 0.451
+        },
+        "source_to_rtp_marker": {
+          "count": 2245,
+          "mean_ms": 13.196800445434299,
+          "median_ms": 15.909,
+          "p95_ms": 27.344
+        },
+        "rtp_marker_to_read": {
+          "count": 2245,
+          "mean_ms": 32.241001336302894,
+          "median_ms": 32.399,
+          "p95_ms": 50.355
+        },
+        "next_source_to_read": {
+          "count": 2245,
+          "mean_ms": 12.105138084632516,
+          "median_ms": 15.046,
+          "p95_ms": 25.541
+        }
+      }
+    },
+    "rtsp-tcp": {
+      "session": "rtsp-tcp-1793248438688",
+      "audited_associations": 2700,
+      "stages": {
+        "transport": {
+          "count": 2251,
+          "mean_ms": 45.477948911594844,
+          "median_ms": 46.13,
+          "p95_ms": 60.103
+        },
+        "hash": {
+          "count": 2251,
+          "mean_ms": 0.10940693025322079,
+          "median_ms": 0.094,
+          "p95_ms": 0.211
+        },
+        "lock_wait": {
+          "count": 2251,
+          "mean_ms": 0.0003953798311861395,
+          "median_ms": 0.0,
+          "p95_ms": 0.001
+        },
+        "match": {
+          "count": 2251,
+          "mean_ms": 0.03157085739671257,
+          "median_ms": 0.028,
+          "p95_ms": 0.06
+        },
+        "association": {
+          "count": 2251,
+          "mean_ms": 0.14255175477565526,
+          "median_ms": 0.124,
+          "p95_ms": 0.266
+        },
+        "source_to_write": {
+          "count": 2251,
+          "mean_ms": 0.0374762327854287,
+          "median_ms": 0.029,
+          "p95_ms": 0.086
+        },
+        "write_call": {
+          "count": 2251,
+          "mean_ms": 0.20466725899600177,
+          "median_ms": 0.169,
+          "p95_ms": 0.45
+        },
+        "source_to_rtp_marker": {
+          "count": 0
+        },
+        "rtp_marker_to_read": {
+          "count": 0
+        },
+        "next_source_to_read": {
+          "count": 2251,
+          "mean_ms": 12.148800533096402,
+          "median_ms": 14.911,
+          "p95_ms": 27.292
+        }
+      }
+    },
+    "rtmp-3": {
+      "session": "rtmp-3-1793248438688",
+      "audited_associations": 2614,
+      "stages": {
+        "transport": {
+          "count": 2253,
+          "mean_ms": 11.966845095428317,
+          "median_ms": 14.233,
+          "p95_ms": 26.554
+        },
+        "hash": {
+          "count": 2253,
+          "mean_ms": 0.09758810474922326,
+          "median_ms": 0.085,
+          "p95_ms": 0.182
+        },
+        "lock_wait": {
+          "count": 2253,
+          "mean_ms": 0.0007021748779405237,
+          "median_ms": 0.0,
+          "p95_ms": 0.001
+        },
+        "match": {
+          "count": 2253,
+          "mean_ms": 0.03188770528184643,
+          "median_ms": 0.028,
+          "p95_ms": 0.061
+        },
+        "association": {
+          "count": 2253,
+          "mean_ms": 0.13135641367066134,
+          "median_ms": 0.118,
+          "p95_ms": 0.242
+        },
+        "source_to_write": {
+          "count": 2253,
+          "mean_ms": 0.03558277851753218,
+          "median_ms": 0.029,
+          "p95_ms": 0.073
+        },
+        "write_call": {
+          "count": 2253,
+          "mean_ms": 0.2623275632490013,
+          "median_ms": 0.209,
+          "p95_ms": 0.614
+        },
+        "source_to_rtp_marker": {
+          "count": 0
+        },
+        "rtp_marker_to_read": {
+          "count": 0
+        },
+        "next_source_to_read": {
+          "count": 44,
+          "mean_ms": 2.2332954545454546,
+          "median_ms": 1.652,
+          "p95_ms": 3.012
+        }
+      }
+    }
+  },
+  "errors": [],
+  "scope": "Monotonic local timestamps; receive is complete av_read_frame output, RTP marker is observed at the local UDP relay before forwarding, not NIC arrival. Warm-up excluded from aggregates."
+}

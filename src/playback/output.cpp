@@ -407,7 +407,7 @@ void Output::run(int seconds) {
             auto render_start = now_us();
             std::vector<bool> painted(chains.size(), false);
             p.renderer->BeginDraw();
-            int cols = chains.size() > 4 ? 4 : 2;
+            int cols = chains.size() == 1 ? 1 : (chains.size() > 4 ? 4 : 2);
             int rows = int((chains.size() + cols - 1) / cols);
             int w = 1000 / cols, h = 600 / std::max(1, rows);
             for (auto &[i, v] : updates) {
@@ -423,11 +423,11 @@ void Output::run(int seconds) {
                     SUCCEEDED(p.bitmaps[i]->CopyFromMemory(nullptr, v.bgra.data(), v.stride))) {
                     auto x = float(i % cols * w), y = float(i / cols * h);
                     p.renderer->FillRectangle(D2D1::RectF(x, y, x + w, y + h), p.black.Get());
-                    auto scale = std::min(float(w) / v.width, float(h) / v.height);
-                    auto rw = v.width * scale, rh = v.height * scale;
+                    auto content = preview_content_rect(int(x), int(y), w, h, v.width, v.height);
                     p.renderer->DrawBitmap(
                         p.bitmaps[i].Get(),
-                        D2D1::RectF(x + (w - rw) / 2, y + (h - rh) / 2, x + (w + rw) / 2, y + (h + rh) / 2));
+                        D2D1::RectF(float(content.x), float(content.y), float(content.x + content.width),
+                                   float(content.y + content.height)));
                     painted[i] = true;
                 } else
                     chains[i]->did_drop(v.frame_id, "output_bitmap_failed", v.generation);
@@ -454,9 +454,13 @@ void Output::run(int seconds) {
                         SUCCEEDED(pixels->GetDataPointer(&bytes, &data)) && bytes >= stride * 600) {
                         auto &chain = *chains[i];
                         std::lock_guard lock(chain.mutex);
-                        if (!chain.stop_requested && chain.playback_generation == v.generation)
-                            chain.preview.capture(data + (i / cols * h) * stride + (i % cols * w) * 4,
-                                                   int(stride), w, h, v.frame_id, v.generation, observed);
+                        if (!chain.stop_requested && chain.playback_generation == v.generation) {
+                            auto content = preview_content_rect(int(i % cols) * w, int(i / cols) * h,
+                                                                w, h, v.width, v.height);
+                            chain.preview.capture(data + content.y * stride + content.x * 4,
+                                                  int(stride), content.width, content.height,
+                                                  v.frame_id, v.generation, observed);
+                        }
                     }
                 }
             }

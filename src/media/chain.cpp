@@ -29,6 +29,7 @@ static int64_t to_us(int64_t pts, AVRational tb) {
 // Never writes identifiers into the media. AAC hashes its unmodified raw payload.
 static std::string signature(const AVPacket *p, AVCodecID codec, const AVCodecParameters *par) {
     std::vector<uint8_t> bytes;
+    bytes.reserve(size_t(std::max(0, p->size)) + 32);
     if (codec == AV_CODEC_ID_H264) {
         auto append = [&](const uint8_t *b, size_t n) {
             if (n && ((b[0] & 31) >= 1 && (b[0] & 31) <= 5)) {
@@ -102,7 +103,7 @@ void Chain::injection_truth(const Json &value) {
     app.journal->append(session, value.dump(), true);
 }
 void Chain::rtp_frame_observed(const std::vector<uint8_t> &access_unit, size_t before, size_t after,
-                               uint32_t timestamp) {
+                               uint32_t timestamp, int64_t last_packet_us, bool marker_seen) {
     AVPacket packet{};
     packet.data = const_cast<uint8_t *>(access_unit.data());
     packet.size = int(access_unit.size());
@@ -124,6 +125,8 @@ void Chain::rtp_frame_observed(const std::vector<uint8_t> &access_unit, size_t b
              {"rtp_timestamp", timestamp},
              {"packets_before", before},
              {"packets_after", after},
+             {"last_packet_us", last_packet_us},
+             {"marker_seen", marker_seen},
              {"mono_us", now_us()}});
     if (after < before) {
         u->frame.damaged = true;
@@ -175,6 +178,7 @@ void Chain::reset_playback_locked(const std::string &reason) {
     latency_samples.clear();
     transport_samples.clear();
     pipeline_samples.clear();
+    association_samples.clear();
     presentation_times.clear();
     freeze.reset();
     unmapped_outputs.clear();
@@ -226,6 +230,7 @@ void Chain::start() {
         latency_samples.clear();
         transport_samples.clear();
         pipeline_samples.clear();
+        association_samples.clear();
         presentation_times.clear();
         received_video_units = 0;
         receiver_connection = 0;
@@ -448,7 +453,15 @@ void Chain::publish() {
                 p->stream_index = stream_map[idx];
                 av_packet_rescale_ts(p, s->time_base, output->streams[p->stream_index]->time_base);
                 p->pos = -1;
+                const auto write_started = now_us();
                 rc = av_interleaved_write_frame(output, p);
+                const auto write_done = now_us();
+                if (video) {
+                    std::lock_guard lock(mutex);
+                    observe({{"stage", "publish_write"}, {"id", unit->id},
+                             {"source_us", unit->source_us}, {"write_started_us", write_started},
+                             {"write_done_us", write_done}, {"result", rc}, {"mono_us", write_done}});
+                }
                 av_packet_unref(p);
                 if (rc < 0) {
                     std::lock_guard lock(mutex);
@@ -646,11 +659,15 @@ void Chain::receive() {
                 }
                 bool video = s->codecpar->codec_type == AVMEDIA_TYPE_VIDEO;
                 auto pts = to_us(p->pts, s->time_base);
+                const auto hash_started = now_us();
                 auto sig = signature(p, s->codecpar->codec_id, s->codecpar);
+                const auto hash_done = now_us();
                 std::shared_ptr<SourceUnit> unit;
                 FaultConfig f;
+                const auto lock_requested = now_us();
                 {
                     std::lock_guard lock(mutex);
+                    const auto lock_acquired = now_us();
                     if (generation != playback_generation)
                         throw std::runtime_error("playback epoch changed");
                     received_bytes += p->size;
@@ -660,10 +677,21 @@ void Chain::receive() {
                         byte_samples.pop_front();
                     if (video)
                         ++received_video_units;
+                    const auto match_started = now_us();
                     unit = match(sig, video, pts, packet_received);
                     if (!unit && video)
                         unit = match_damaged_pts(pts, packet_received);
+                    const auto matched_at = now_us();
                     if (video && unit) {
+                        association_samples.push_back({packet_received, hash_started, hash_done, lock_requested,
+                                                       lock_acquired, match_started, matched_at});
+                        while (!association_samples.empty() && packet_received - association_samples.front().received > 1000000)
+                            association_samples.pop_front();
+                        observe({{"stage", "receiver_association"}, {"id", unit->id}, {"generation", generation},
+                                 {"received_us", packet_received}, {"hash_started_us", hash_started},
+                                 {"hash_done_us", hash_done}, {"lock_requested_us", lock_requested},
+                                 {"lock_acquired_us", lock_acquired}, {"match_started_us", match_started},
+                                 {"matched_us", matched_at}, {"mono_us", matched_at}});
                         if (auto delay = measured_latency_ms(unit->source_us, packet_received))
                             transport_samples.emplace_back(packet_received, *delay);
                         while (!transport_samples.empty() && packet_received - transport_samples.front().first > 1000000)
@@ -1218,6 +1246,21 @@ Json Chain::snapshot() {
             ++stage_count;
         }
     auto stage_value = [&](double value) -> Json { return stage_count ? Json(value / stage_count) : Json(nullptr); };
+    size_t association_count = 0;
+    double hash_sum = 0, lock_sum = 0, match_sum = 0, association_sum = 0, preparation_sum = 0;
+    for (const auto &t : association_samples)
+        if (t.received <= now && now - t.received <= 1000000) {
+            hash_sum += (t.hash_done - t.hash_started) / 1000.0;
+            lock_sum += (t.lock_acquired - t.lock_requested) / 1000.0;
+            match_sum += (t.matched - t.match_started) / 1000.0;
+            association_sum += (t.matched - t.received) / 1000.0;
+            preparation_sum += (t.hash_started - t.received + t.lock_requested - t.hash_done +
+                                t.match_started - t.lock_acquired) / 1000.0;
+            ++association_count;
+        }
+    auto association_value = [&](double value) -> Json {
+        return association_count ? Json(value / association_count) : Json(nullptr);
+    };
     auto current_latency_count = std::count_if(latency_samples.begin(), latency_samples.end(), [&](auto &s) {
         return s.first <= now && now - s.first <= 1000000;
     });
@@ -1285,6 +1328,12 @@ Json Chain::snapshot() {
         {"source_delivery_match_pct", sent ? 100.0 * matched_video / sent : 0},
         {"transport_ms", transport_mean ? Json(*transport_mean) : Json(nullptr)},
         {"transport_sample_count", transport_count},
+        {"receive_hash_ms", association_value(hash_sum)},
+        {"receive_lock_wait_ms", association_value(lock_sum)},
+        {"receive_match_ms", association_value(match_sum)},
+        {"receive_bookkeeping_ms", association_value(preparation_sum)},
+        {"receive_association_ms", association_value(association_sum)},
+        {"association_sample_count", association_count},
         {"transport_validity", transport_count ? "valid" : "no_recent_matched_packet"},
         {"receive_to_submit_ms", stage_value(stage_sum.receive_to_submit_ms)},
         {"decoder_ms", stage_value(stage_sum.decoder_ms)},

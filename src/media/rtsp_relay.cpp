@@ -82,6 +82,7 @@ struct RtspRelay::Impl {
         std::mt19937 rng{1};
         uint32_t seed = 1, current_timestamp = 0;
         bool has_frame = false;
+        int64_t last_packet_us = 0;
         size_t before_count = 0, after_count = 0;
         std::vector<uint8_t> access_unit;
         bool fu_open = false;
@@ -150,9 +151,10 @@ struct RtspRelay::Impl {
                     fu_open = false;
             }
         }
-        void finish() {
+        void finish(bool marker_seen = false) {
             if (video && has_frame && !access_unit.empty())
-                chain->rtp_frame_observed(access_unit, before_count, after_count, current_timestamp);
+                chain->rtp_frame_observed(access_unit, before_count, after_count, current_timestamp,
+                                          last_packet_us, marker_seen);
             access_unit.clear();
             before_count = after_count = 0;
             has_frame = false;
@@ -176,6 +178,7 @@ struct RtspRelay::Impl {
                     int length = sizeof(from);
                     int n = recvfrom(s, reinterpret_cast<char *>(buffer), sizeof(buffer), 0,
                                      reinterpret_cast<sockaddr *>(&from), &length);
+                    const auto packet_observed = now_us();
                     if (n <= 0)
                         continue;
                     bool from_client = ntohs(from.sin_port) == original_client + channel;
@@ -212,6 +215,7 @@ struct RtspRelay::Impl {
                             finish();
                         has_frame = true;
                         current_timestamp = stamp;
+                        last_packet_us = packet_observed;
                         ++before_count;
                         assemble(buffer + header, end - header);
                     }
@@ -253,7 +257,7 @@ struct RtspRelay::Impl {
                         (void)loss;
                     }
                     if (marker && video)
-                        finish();
+                        finish(true);
                 }
             }
             finish();

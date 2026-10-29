@@ -63,9 +63,14 @@
     const outcomes = Object.entries(c.loss_reasons || {}).map(([key, count]) =>
       `${reasons[key] || `未识别结局（${key}）`}：${number(count)}帧`).join('；') || '窗口尚无结局记录';
     return [
-      ['实测延迟分段', '传输延迟（卡片口径）', `${number(c.transport_ms, 2)} ms`, '源端实时释放→接收线程取得完整压缩包；近1秒全部已匹配视频包均值，包含推送、服务器和接收等待，不是纯网线耗时。'],
+      ['实测延迟分段', '传输延迟（卡片口径）', `${number(c.transport_ms, 2)} ms`, '源端实时释放→av_read_frame返回完整压缩帧后立即打点，先打点再计算哈希、等待锁和查找；包含发送、服务器、接收解封装与组帧等待，不是网卡到达时间或纯网络耗时。'],
       ['', '完整端到端延迟', `${number(c.latency_ms, 2)} ms`, '保留原口径：源端实时释放→WIC像素完成；现有延迟告警仍按此值判断。'],
       ['', '接收→送入解码前', `${number(c.receive_to_submit_ms, 2)} ms`, '完整包取得→送入解码函数调用前，包括身份匹配等实际处理。'],
+      ['', '接收后哈希计算', `${number(c.receive_hash_ms, 3)} ms`, 'SHA-256及压缩数据规范化的实测耗时；在接收打点之后，不计入卡片传输延迟。'],
+      ['', '等待链路锁', `${number(c.receive_lock_wait_ms, 3)} ms`, '请求链路锁→实际取得锁；未把锁等待误计入网络耗时。'],
+      ['', '查找源端对应帧', `${number(c.receive_match_ms, 3)} ms`, '取得锁后进行身份查找、匹配及匹配事件记录的实测耗时。'],
+      ['', '接收后其他记账', `${number(c.receive_bookkeeping_ms, 3)} ms`, '读取包信息、准备锁和锁内计数等其余处理；与前三项合计为下项。'],
+      ['', '接收→身份关联完成', `${number(c.receive_association_ms, 3)} ms`, `近1秒同组${number(c.association_sample_count)}个已匹配视频包的实测均值；是接收→送入解码前的一部分，不重复相加。`],
       ['', '解码阶段耗时', `${number(c.decoder_ms, 2)} ms`, '送入调用前→对应画面产出；包含send_packet中的同步解码、后续取帧和重排序等待，不是纯CPU执行时间。'],
       ['', '其中送入调用耗时', `${number(c.submit_call_ms, 2)} ms`, 'send_packet调用前→成功返回，是解码阶段的子集，不重复相加。'],
       ['', '接收→解码完成', `${number(c.decode_ms, 2)} ms`, '前两段之和，均来自同一帧真实事件。'],

@@ -6,6 +6,13 @@ static void require(bool value, const char *message) {
     if (!value) throw std::runtime_error(message);
 }
 int main() {
+    auto landscape = preview_content_rect(500, 0, 500, 600, 1920, 1080);
+    require(landscape.x == 500 && landscape.y == 159 && landscape.width == 500 && landscape.height == 281,
+            "Mirror only the actual landscape WIC content, excluding layout padding");
+    auto portrait = preview_content_rect(0, 300, 500, 300, 1080, 1920);
+    require(portrait.width == 169 && portrait.height == 300 && portrait.x == 165 && portrait.y == 300,
+            "Portrait content stays within the correct tile");
+    require(preview_content_rect(0, 0, 0, 600, 1920, 1080).width == 0, "Reject empty surfaces");
     PreviewMirror preview;
     std::vector<uint8_t> pixels(32 * 16 * 4, 255);
     preview.capture(pixels.data(), 128, 32, 16, 42, 1, 1000000);
