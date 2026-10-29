@@ -1,0 +1,12 @@
+{
+  "session": "rtsp-udp-1793261663644",
+  "timeout_outcomes": {
+    "damaged_decode_no_output": 145,
+    "decode_after_input_loss": 11
+  },
+  "decoder_receive_states": {
+    "needs_input": 2076
+  },
+  "errors": [],
+  "scope": "Successful submission, configured 5-second wait, no earlier matched decode output and actual preceding loss observations. Does not prove exact H.264 reference dependencies; injection truth is not read."
+}

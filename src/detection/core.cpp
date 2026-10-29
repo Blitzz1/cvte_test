@@ -126,6 +126,17 @@ const char *outcome_name(Outcome v) {
         return "unknown_missing";
     }
 }
+bool unmapped_output_may_be_frame(const FrameRecord &f, const UnmappedOutput &o, uint64_t generation) {
+    if (o.generation != generation || o.observed_us < f.source_us)
+        return false;
+    // A frame with no forwarded RTP packets cannot be an unrelated decoder output.
+    if (f.rtp_boundary_verified && f.rtp_packets_before && !f.rtp_packets_after)
+        return false;
+    return !o.source_media_us || std::abs(*o.source_media_us - f.media_us) <= 2000;
+}
+bool rtp_timestamp_matches(uint32_t actual, uint32_t expected, uint32_t tolerance) {
+    return uint32_t(actual - expected) <= tolerance || uint32_t(expected - actual) <= tolerance;
+}
 Outcome resolve_missing(const FrameRecord &f, Microseconds now, Microseconds timeout,
                         uint64_t generation, bool ambiguous_output) {
     if (f.outcome != Outcome::pending || now - f.source_us <= timeout)

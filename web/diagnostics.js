@@ -28,10 +28,10 @@
   };
   const reasons = {
     presented: '已完成软件画面输出', source_skipped: '源端主动跳过', send_failed: '发送失败',
-    transport_lost: '传输阶段缺失', receiver_discarded: '接收后、解码前主动丢弃',
+    transport_lost: 'UDP/RTP丢包：未进入解码的帧缺失', receiver_discarded: '接收后、解码前主动丢弃',
     decode_failed: '解码器明确拒绝输入', decode_no_output: '已提交解码但超时未产出画面',
     decode_after_input_loss: '输入缺失后解码未产出（关联证据）',
-    damaged_decode_no_output: '传输损伤后解码未产出',
+    damaged_decode_no_output: 'UDP包不完整：已提交解码但超时未产出',
     presentation_dropped: '呈现阶段丢弃', unknown_missing: '缺失但原因尚不能确定',
     pending: '仍在等待结局',
   };

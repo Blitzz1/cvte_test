@@ -1,0 +1,147 @@
+{
+  "session": "rtsp-udp-1793261663644",
+  "resolution_counts": {
+    "transport_lost": 205,
+    "damaged_decode_no_output": 145,
+    "decode_after_input_loss": 11
+  },
+  "rtp_pts_associations": 501,
+  "unmapped_submissions": 0,
+  "unmapped_outputs": 0,
+  "errors": [],
+  "examples": {
+    "transport_lost": [
+      {
+        "generation": 0,
+        "id": 1204,
+        "mono_us": 282761229868,
+        "outcome": "transport_lost",
+        "packets_after": 6,
+        "packets_before": 10,
+        "preceding_input_loss_id": 0,
+        "rtp_boundary_verified": true,
+        "rtp_timestamp": 2630800526,
+        "stage": "frame_resolution",
+        "submitted_us": null,
+        "transport_damaged": true
+      },
+      {
+        "generation": 0,
+        "id": 1207,
+        "mono_us": 282761229868,
+        "outcome": "transport_lost",
+        "packets_after": 4,
+        "packets_before": 8,
+        "preceding_input_loss_id": 0,
+        "rtp_boundary_verified": true,
+        "rtp_timestamp": 2630803526,
+        "stage": "frame_resolution",
+        "submitted_us": null,
+        "transport_damaged": true
+      },
+      {
+        "generation": 0,
+        "id": 1209,
+        "mono_us": 282761229868,
+        "outcome": "transport_lost",
+        "packets_after": 7,
+        "packets_before": 11,
+        "preceding_input_loss_id": 0,
+        "rtp_boundary_verified": true,
+        "rtp_timestamp": 2630806526,
+        "stage": "frame_resolution",
+        "submitted_us": null,
+        "transport_damaged": true
+      }
+    ],
+    "damaged_decode_no_output": [
+      {
+        "generation": 2,
+        "id": 1276,
+        "mono_us": 282762288715,
+        "outcome": "damaged_decode_no_output",
+        "packets_after": 6,
+        "packets_before": 10,
+        "preceding_input_loss_id": 1276,
+        "rtp_boundary_verified": true,
+        "rtp_timestamp": 2630884526,
+        "stage": "frame_resolution",
+        "submitted_us": 282757106393,
+        "transport_damaged": true
+      },
+      {
+        "generation": 2,
+        "id": 1281,
+        "mono_us": 282762288715,
+        "outcome": "damaged_decode_no_output",
+        "packets_after": 5,
+        "packets_before": 7,
+        "preceding_input_loss_id": 1281,
+        "rtp_boundary_verified": true,
+        "rtp_timestamp": 2630890526,
+        "stage": "frame_resolution",
+        "submitted_us": 282757109828,
+        "transport_damaged": true
+      },
+      {
+        "generation": 2,
+        "id": 1284,
+        "mono_us": 282762288715,
+        "outcome": "damaged_decode_no_output",
+        "packets_after": 5,
+        "packets_before": 8,
+        "preceding_input_loss_id": 1284,
+        "rtp_boundary_verified": true,
+        "rtp_timestamp": 2630893526,
+        "stage": "frame_resolution",
+        "submitted_us": 282757184186,
+        "transport_damaged": true
+      }
+    ],
+    "decode_after_input_loss": [
+      {
+        "generation": 2,
+        "id": 1299,
+        "mono_us": 282763306315,
+        "outcome": "decode_after_input_loss",
+        "packets_after": 8,
+        "packets_before": 8,
+        "preceding_input_loss_id": 1297,
+        "rtp_boundary_verified": true,
+        "rtp_timestamp": 2630911526,
+        "stage": "frame_resolution",
+        "submitted_us": 282757339183,
+        "transport_damaged": false
+      },
+      {
+        "generation": 2,
+        "id": 1645,
+        "mono_us": 282767340727,
+        "outcome": "decode_after_input_loss",
+        "packets_after": 8,
+        "packets_before": 8,
+        "preceding_input_loss_id": 1642,
+        "rtp_boundary_verified": true,
+        "rtp_timestamp": 2631316526,
+        "stage": "frame_resolution",
+        "submitted_us": 282761810331,
+        "transport_damaged": false
+      },
+      {
+        "generation": 2,
+        "id": 1896,
+        "mono_us": 282770375035,
+        "outcome": "decode_after_input_loss",
+        "packets_after": 8,
+        "packets_before": 8,
+        "preceding_input_loss_id": 1894,
+        "rtp_boundary_verified": true,
+        "rtp_timestamp": 2631610526,
+        "stage": "frame_resolution",
+        "submitted_us": 282765101041,
+        "transport_damaged": false
+      }
+    ]
+  },
+  "scope": "RTP boundary packet counts, source identity, validated PTS mapping, successful decoder submission and missing output at timeout. Injection truth is not read. Partial loss may still decode; no exact reference-picture dependency claim."
+}

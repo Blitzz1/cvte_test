@@ -120,6 +120,10 @@ void Chain::rtp_frame_observed(const std::vector<uint8_t> &access_unit, size_t b
     if (candidates.size() != 1)
         return;
     auto u = candidates.front();
+    u->frame.rtp_boundary_verified = marker_seen;
+    u->frame.rtp_packets_before = before;
+    u->frame.rtp_packets_after = after;
+    u->frame.rtp_timestamp = timestamp;
     observe({{"stage", "rtp_boundary_observation"},
              {"id", u->id},
              {"rtp_timestamp", timestamp},
@@ -171,6 +175,7 @@ void Chain::reset_playback_locked(const std::string &reason) {
     first_present_source_us = 0;
     first_rx_media = 0;
     video_pts_offset_.reset();
+    rtp_pts_offset_.reset();
     audio_pts_offset_.reset();
     last_video_match_us_ = 0;
     sync_samples.clear();
@@ -238,6 +243,7 @@ void Chain::start() {
         rtp_packets_received = rtp_packets_lost = rtp_packets_duplicates = 0;
         session_max_consecutive = 0;
         video_pts_offset_.reset();
+        rtp_pts_offset_.reset();
         audio_pts_offset_.reset();
         freeze.reset();
         completed_freezes.clear();
@@ -479,6 +485,7 @@ void Chain::publish() {
             video_media_index.clear();
             signatures.clear();
             video_pts_offset_.reset();
+            rtp_pts_offset_.reset();
             audio_pts_offset_.reset();
         }
         publisher_ready = false;
@@ -525,6 +532,9 @@ std::shared_ptr<SourceUnit> Chain::match(const std::string &sig, bool video, int
     if (video) {
         ++matched_video;
         last_video_match_us_ = now_us();
+        if (pts != INT64_MIN && u->frame.rtp_boundary_verified)
+            rtp_pts_offset_ = u->frame.rtp_timestamp -
+                uint32_t(av_rescale_q(pts, AV_TIME_BASE_Q, AVRational{1, 90000}));
     }
     observe({{"stage", "received_matched"},
              {"id", u->id},
@@ -536,20 +546,32 @@ std::shared_ptr<SourceUnit> Chain::match(const std::string &sig, bool video, int
              {"source_media_us", u->media_us}});
     return u;
 }
-std::shared_ptr<SourceUnit> Chain::match_damaged_pts(int64_t pts, int64_t received) {
-    if (pts == INT64_MIN || !video_pts_offset_ || now_us() - last_video_match_us_ > 500000)
+std::shared_ptr<SourceUnit> Chain::rtp_source_at_pts(int64_t pts) {
+    if (pts == INT64_MIN || !video_pts_offset_ || !rtp_pts_offset_ ||
+        now_us() - last_video_match_us_ > 15000000)
         return {};
     auto mapped = pts + *video_pts_offset_;
+    auto expected_rtp = uint32_t(av_rescale_q(pts, AV_TIME_BASE_Q, AVRational{1, 90000})) + *rtp_pts_offset_;
     std::shared_ptr<SourceUnit> found;
     for (auto it = video_media_index.lower_bound(mapped - 2000);
          it != video_media_index.end() && it->first <= mapped + 2000; ++it) {
         if (auto u = it->second.lock();
-            u && !u->matched && u->frame.damaged && now_us() - u->source_us < 15000000) {
+            u && u->frame.rtp_boundary_verified && u->frame.rtp_packets_after > 0 &&
+            now_us() - u->source_us < 15000000 &&
+            // RTCP clock alignment can shift FFmpeg's PTS slightly. Keep the same
+            // 2 ms bound as the source-media candidate search (180 ticks at 90 kHz).
+            rtp_timestamp_matches(u->frame.rtp_timestamp, expected_rtp, 180)) {
             if (found)
                 return {};
             found = u;
         }
     }
+    return found;
+}
+std::shared_ptr<SourceUnit> Chain::match_damaged_pts(int64_t pts, int64_t received) {
+    auto found = rtp_source_at_pts(pts);
+    if (found && found->matched)
+        return {};
     if (found) {
         found->matched = true;
         found->received_media_us = pts;
@@ -563,6 +585,9 @@ std::shared_ptr<SourceUnit> Chain::match_damaged_pts(int64_t pts, int64_t receiv
                  {"source_media_us", found->media_us},
                  {"video", true},
                  {"generation", playback_generation},
+                 {"rtp_timestamp", found->frame.rtp_timestamp},
+                 {"packets_before", found->frame.rtp_packets_before},
+                 {"packets_after", found->frame.rtp_packets_after},
                  {"evidence", "rtp_boundary_and_validated_pts"}});
     }
     return found;
@@ -779,8 +804,12 @@ void Chain::receive() {
                         if (video) {
                             std::lock_guard lock(mutex);
                             if (!u) {
-                                unmapped_outputs.push_back(now_us());
-                                while (!unmapped_outputs.empty() && now_us() - unmapped_outputs.front() > 30000000)
+                                std::optional<int64_t> mapped_media;
+                                if (fpts != AV_NOPTS_VALUE)
+                                    if (auto candidate = rtp_source_at_pts(to_us(fpts, s->time_base)))
+                                        mapped_media = candidate->media_us;
+                                unmapped_outputs.push_back({decoded_at, generation, mapped_media});
+                                while (!unmapped_outputs.empty() && decoded_at - unmapped_outputs.front().observed_us > 30000000)
                                     unmapped_outputs.pop_front();
                             }
                             if (u && u->frame.decode_generation == generation) {
@@ -798,6 +827,8 @@ void Chain::receive() {
                                      {"frame_pts", frame->pts}, {"best_effort_pts", fpts},
                                      {"decode_error_flags", frame->decode_error_flags},
                                      {"frame_flags", frame->flags},
+                                     {"mapped_source_media_us", !u && unmapped_outputs.back().source_media_us
+                                          ? Json(*unmapped_outputs.back().source_media_us) : Json(nullptr)},
                                      {"mono_us", decoded_at}, {"generation", generation}});
                         }
                         int64_t media = 0, due = 0;
@@ -1067,9 +1098,12 @@ void Chain::did_present(uint64_t id, int64_t media, int64_t source_time, int64_t
     last_video_media = media;
     last_present_us = observed;
     last_video_source_valid = source_time > 0;
-    if (!source_time)
-        unmapped_outputs.push_back(observed);
-    while (!unmapped_outputs.empty() && observed - unmapped_outputs.front() > 30000000)
+    if (!source_time) {
+        auto candidate = video_pts_offset_ ? rtp_source_at_pts(media - *video_pts_offset_) : nullptr;
+        unmapped_outputs.push_back({observed, generation,
+            candidate ? std::optional<int64_t>(candidate->media_us) : std::nullopt});
+    }
+    while (!unmapped_outputs.empty() && observed - unmapped_outputs.front().observed_us > 30000000)
         unmapped_outputs.pop_front();
     av_offset_ms.reset();
     if (source_time && audio_sample) {
@@ -1172,7 +1206,8 @@ Json Chain::snapshot() {
             if (f.outcome == Outcome::pending &&
                 now - u->source_us > settings.resolution_timeout_ms * 1000LL) {
                 auto ambiguous_output = std::any_of(unmapped_outputs.begin(), unmapped_outputs.end(),
-                                                    [&](auto t) { return t >= u->source_us && t <= now; });
+                                                    [&](const auto &o) { return o.observed_us <= now &&
+                                                        unmapped_output_may_be_frame(f, o, playback_generation); });
                 f.outcome = resolve_missing(f, now, settings.resolution_timeout_ms * 1000LL,
                                             playback_generation, ambiguous_output);
                 if (f.outcome != Outcome::pending)
@@ -1181,7 +1216,10 @@ Json Chain::snapshot() {
                              {"generation", f.decode_generation},
                              {"submitted_us", f.decode_submitted_us ? Json(*f.decode_submitted_us) : Json()},
                              {"preceding_input_loss_id", f.preceding_input_loss_id},
-                             {"transport_damaged", f.damaged}});
+                             {"transport_damaged", f.damaged},
+                             {"rtp_boundary_verified", f.rtp_boundary_verified},
+                             {"rtp_timestamp", f.rtp_timestamp},
+                             {"packets_before", f.rtp_packets_before}, {"packets_after", f.rtp_packets_after}});
                 u->frame.outcome = f.outcome;
             }
             if (now - u->source_us >= settings.resolution_timeout_ms * 1000LL)
@@ -1265,7 +1303,7 @@ Json Chain::snapshot() {
         return s.first <= now && now - s.first <= 1000000;
     });
     auto incomplete_latency_window = std::any_of(unmapped_outputs.begin(), unmapped_outputs.end(),
-                                                 [&](auto t) { return t <= now && now - t <= 1000000; });
+                                                 [&](const auto &o) { return o.observed_us <= now && now - o.observed_us <= 1000000; });
     Json j = {
         {"id", cfg.id},
         {"alias", cfg.alias},

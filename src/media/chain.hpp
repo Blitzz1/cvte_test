@@ -63,7 +63,7 @@ class Chain {
     double conversion_ms = 0, render_work_ms = 0;
     std::optional<AudioClockSample> audio_sample;
     uint64_t sync_segment = 0;
-    std::deque<int64_t> unmapped_outputs;
+    std::deque<UnmappedOutput> unmapped_outputs;
     bool last_video_source_valid = false;
     int64_t last_video_drop_us = 0;
     explicit Chain(Application &a, ChainConfig c);
@@ -90,8 +90,10 @@ class Chain {
     void receive();
     std::shared_ptr<SourceUnit> match(const std::string &signature, bool video, int64_t pts, int64_t received);
     std::optional<int64_t> video_pts_offset_, audio_pts_offset_;
+    std::optional<uint32_t> rtp_pts_offset_;
     int64_t last_video_match_us_ = 0;
     std::shared_ptr<SourceUnit> match_damaged_pts(int64_t pts, int64_t received);
+    std::shared_ptr<SourceUnit> rtp_source_at_pts(int64_t pts);
     void observe(const Json &j);
 };
 } // namespace avqm

@@ -106,7 +106,18 @@ struct FrameRecord {
     std::optional<Microseconds> decode_submitted_us;
     std::optional<Microseconds> decode_started_us;
     uint64_t decode_generation{}, preceding_input_loss_id{};
+    bool rtp_boundary_verified{};
+    size_t rtp_packets_before{}, rtp_packets_after{};
+    uint32_t rtp_timestamp{};
 };
+struct UnmappedOutput {
+    Microseconds observed_us{};
+    uint64_t generation{};
+    std::optional<Microseconds> source_media_us;
+};
+bool unmapped_output_may_be_frame(const FrameRecord &frame, const UnmappedOutput &output,
+                                 uint64_t generation);
+bool rtp_timestamp_matches(uint32_t actual, uint32_t expected, uint32_t tolerance = 2);
 // Stage attribution from observations, never from configured injection probability.
 Outcome resolve_missing(const FrameRecord &frame, Microseconds now, Microseconds timeout,
                         uint64_t generation, bool ambiguous_output);

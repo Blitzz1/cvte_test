@@ -48,6 +48,33 @@ int main() {
         check(resolve_missing(waiting, 6000000, 5000000, 4, false) == Outcome::decode_after_input_loss,
               "observed input loss context is retained without claiming exact reference dependency");
         waiting.damaged = true;
+        waiting.media_us = 1000000;
+        UnmappedOutput other_output{5000000, 4, 1033333};
+        check(!unmapped_output_may_be_frame(waiting, other_output, 4),
+              "unmapped output of another media frame does not mask UDP loss");
+        other_output.source_media_us = 1001000;
+        check(unmapped_output_may_be_frame(waiting, other_output, 4),
+              "nearby ambiguous output still protects its possible source frame");
+        other_output.generation = 3;
+        check(!unmapped_output_may_be_frame(waiting, other_output, 4),
+              "old playback output cannot mask current loss");
+        other_output = {5000000, 4, std::nullopt};
+        check(unmapped_output_may_be_frame(waiting, other_output, 4),
+              "unknown output media time stays conservative");
+        waiting.rtp_boundary_verified = true;
+        waiting.rtp_packets_before = 8;
+        waiting.rtp_packets_after = 0;
+        check(!unmapped_output_may_be_frame(waiting, other_output, 4),
+              "fully suppressed RTP frame cannot be an unrelated decoded output");
+        waiting.rtp_packets_after = 6;
+        check(unmapped_output_may_be_frame(waiting, other_output, 4),
+              "partial RTP loss does not prove no decoder output");
+        check(rtp_timestamp_matches(0, UINT32_MAX) && rtp_timestamp_matches(UINT32_MAX, 0),
+              "RTP/PTS anchor tolerates timestamp rounding across wraparound");
+        check(!rtp_timestamp_matches(1000, 1004) && !rtp_timestamp_matches(1000, 0),
+              "stale or changed RTP/PTS mapping cannot assign a source identity");
+        check(rtp_timestamp_matches(1042, 1000, 180) && !rtp_timestamp_matches(1181, 1000, 180),
+              "bounded RTCP PTS correction stays within the source association tolerance");
         check(resolve_missing(waiting, 6000000, 5000000, 4, false) == Outcome::damaged_decode_no_output,
               "observed transport damage has a separate decode outcome");
         check(resolve_missing(waiting, 6000000, 5000000, 4, true) == Outcome::unknown_missing,
